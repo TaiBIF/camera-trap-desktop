@@ -24,7 +24,7 @@ export default function MainContainer() {
     //console.log('handle', view, _id);
     if (view === 'image-list') {
       getSource(config.SQLite.dbfile, _id, true).then((res)=>{
-        console.log(res['data']);
+        //console.log(res['data']);
         setSourceData(res['data']);
         setView(view);
       });

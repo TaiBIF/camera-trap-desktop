@@ -1,13 +1,9 @@
 
 # Build
-## Python virtualenv in Windows 10
 
-  # create a virtualenv
-  python -m venv venv
-  .\venv\Scripts\activate.ps1
-
-pip install --upgrade pip
-
+```bash
+$ npm run packager
+```
 
 # react structure
 
@@ -22,3 +18,4 @@ pip install --upgrade pip
 SQLite save timestamp (+8 timezone)
 
 server save UTC
+
