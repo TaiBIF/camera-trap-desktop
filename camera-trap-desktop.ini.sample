@@ -1,0 +1,38 @@
+[Folders]
+
+
+[SQLite]
+dbfile = camera-trap-desktop.db
+
+[Thumbnail]
+destination = camera-trap-desktop
+prefix = thumb-
+
+[AnnotationFieldSpecies]
+type = select
+mutiple = 1
+choices = 山羌:a|山羊:b|水鹿:c
+label = 物種
+
+[AnnotationFieldLifeStage]
+type = select
+choices = 成體|亞成體|幼體|無法判定
+label = 年齡
+
+[AnnotationFieldSex]
+type = select
+choices = 雄性|雌性|無法判定
+label = 性別
+
+[AnnotationFieldAntler]
+type = select
+label = 角況
+choices = 初茸|茸角一尖|茸角一岔二尖|茸角二岔三尖|茸角三岔四尖|硬角一尖|硬角一岔二尖|硬角二岔三尖|硬角三岔四尖|解角
+
+[AnnotationFieldAnimalID]
+type = text
+label = 個體 ID
+
+[AnnotationFieldRemarks]
+type = text
+label = 備註
