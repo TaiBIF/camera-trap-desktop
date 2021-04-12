@@ -36,11 +36,12 @@ const CellRender = ({value}) => {
   return (<div>{value}</div>)
 };
 
-//🐤🐥🍗
+
+//🐤🐥🍗📂
 const STATUS_MAP = {
-  'I': '🥚',
-  'A': '🐤',
-  'O': '🐣',
+  'I': '📁',
+  'O': '👀',
+  'A': '✔️',
   'U': '🐔',
 }
 const getStatus = (x) => {
@@ -51,11 +52,11 @@ const getStatus = (x) => {
   }
 }
 
-const DataTable = ({rowsInPage, count, onSave, onRow}) => {
+const DataTable = ({rowsInPage, count, onSave, onRow, columnList}) => {
   //const [changes, setChanges] = React.useState([]);
   //const [data, setData] = React.useState([]);
-  console.log('render DataTable', rowsInPage);
 
+  console.log('render DataTable', rowsInPage);
   //React.useEffect(() => {
   const tmp = rowsInPage.map((v) => {
     let lifestage = '';
@@ -130,6 +131,10 @@ const DataTable = ({rowsInPage, count, onSave, onRow}) => {
     onRow(rowIndex);
   }
   //console.log(data);
+  //const headers = columnList.map((x)=>x[1]);
+  //console.log(headers);
+  //headers.unshift('status')
+
   const settings = {
     data: data,
     colHeaders: HEADERS,

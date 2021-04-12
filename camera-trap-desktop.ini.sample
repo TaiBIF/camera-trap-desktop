@@ -8,6 +8,9 @@ dbfile = camera-trap-desktop.db
 destination = camera-trap-desktop
 prefix = thumb-
 
+[Column]
+labels = filename:原始檔案|datetime:日期時間|species:物種|age:年齡
+
 [AnnotationFieldSpecies]
 type = select
 mutiple = 1

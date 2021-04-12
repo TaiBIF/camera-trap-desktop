@@ -17,9 +17,13 @@ import Link from '@material-ui/core/Link';
 
 import Typography from '@material-ui/core/Typography';
 
+import Button from '@material-ui/core/Button';
+
 import { ConfigContext } from '../app';
 import DataTable from './DataTable';
 //import UploadStepper from './components/Folder/UploadStepper';
+import DisplaySetting from './DisplaySetting';
+
 import { saveAnnotation, updateImage } from '../utils'
 
 const useStyles = makeStyles({
@@ -33,16 +37,49 @@ const useStyles = makeStyles({
   }
 });
 
+
 const ImageListContainer = ({sourceData, onChangeView}) => {
   const classes = useStyles();
   const [openImageScreen, setOpenImageScreen] = React.useState(false);
   const [currentRowIndex, setCurrentRowIndex] = React.useState(0)
+  const [openDisplaySetting, setOpenDisplaySetting] = React.useState(false);
+
 
   const config = React.useContext(ConfigContext);
+
+  const confColumnLabels = config.Column.labels.split('|');
+  const initColumnState = {};
+  for (let i=0;i<confColumnLabels.length;i++) {
+    const v = confColumnLabels[i].split(':');
+    initColumnState[v[0]] = {
+      key: v[0],
+      label: v[1],
+      checked: true,
+      sort: i,
+    }
+  }
+  //const initColumnState = confColumnLabels.map((x) => {
+  //  const v = x.split(':')
+  //  v.push(true);
+  //  return (v)
+  //});
+  const [columnState, setColumnState] = React.useState(initColumnState);
 
   React.useEffect(() => {
   }, []);
 
+  const handleColumnDisplayClick = (e, key) => {
+    //console.log(e.target, key);
+    setColumnState((ps)=>{
+      const tmp = ps[key];
+      tmp.checked = (tmp.checked) ? false : true;
+      return {
+        ...ps,
+        [key]: tmp
+      }
+    })
+  }
+  console.log(columnState,'--------');
   const getImage = (index) => {
     if (index > -1) {
       const path = sourceData.image_list[index][1];
@@ -126,6 +163,9 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       </DialogContent>
       </Dialog>
   )
+
+
+
   //console.log(sourceData);
   return (
       <div className={classes.root}>
@@ -138,15 +178,21 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       </Grid>
       </Grid>
       <hr />
+
+      <Button onClick={()=> setOpenDisplaySetting(true)}>
+      setting
+    </Button>
+
       <Grid container spacing={1}>
       <Grid item sm={8}>
-      <DataTable count={sourceData.image_list.length} onSave={handleSaveButton} onRow={handleRowClick} rowsInPage={sourceData.image_list}/>
+      <DataTable count={sourceData.image_list.length} onSave={handleSaveButton} onRow={handleRowClick} rowsInPage={sourceData.image_list} columnState={columnState} />
       </Grid>
       <Grid item sm={4}>
       <ImagePreview />
       </Grid>
       </Grid>
       <ImageScreen />
+      <DisplaySetting openDisplaySetting={openDisplaySetting} setOpenDisplaySetting={setOpenDisplaySetting} columnState={columnState} onColumnDisplayClick={handleColumnDisplayClick} />
       </div>
   )
 }
