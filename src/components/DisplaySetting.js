@@ -12,16 +12,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 
 const DisplaySetting = ({openDisplaySetting, setOpenDisplaySetting, columnState, onColumnDisplayClick}) => {
-  const [state, setState] = React.useState({
-    checkedA: true,
-    checkedB: true,
-    checkedF: true,
-    checkedG: true,
-  });
 
-  const handleChange = (event) => {
-    //setState({ ...state, [event.target.name]: event.target.checked });
-  };
   const columnList = [];
   for (let i in columnState) {
     columnList.push(columnState[i]);
@@ -51,7 +42,6 @@ const DisplaySetting = ({openDisplaySetting, setOpenDisplaySetting, columnState,
           /> ))
       }
       </FormGroup>
-
       </DialogContent>
       </Dialog>
   )

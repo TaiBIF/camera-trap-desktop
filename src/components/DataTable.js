@@ -52,11 +52,9 @@ const getStatus = (x) => {
   }
 }
 
-const DataTable = ({rowsInPage, count, onSave, onRow, columnList}) => {
-  //const [changes, setChanges] = React.useState([]);
-  //const [data, setData] = React.useState([]);
+const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
 
-  console.log('render DataTable', rowsInPage);
+  //console.log('render DataTable', rowsInPage);
   //React.useEffect(() => {
   const tmp = rowsInPage.map((v) => {
     let lifestage = '';
@@ -73,6 +71,7 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnList}) => {
     const dateTime = `${d.getFullYear()}-${d.getMonth().toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
     //return [v[2], v[1], dateTime, lifestage, sex];
     //console.log('xxx', v[5]);
+    console.log(columnState, 'xxxx');
     return {
       image_id: v[0],
       status_display: STATUS_MAP[v[5]],
@@ -130,24 +129,34 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnList}) => {
     })
     onRow(rowIndex);
   }
-  //console.log(data);
-  //const headers = columnList.map((x)=>x[1]);
-  //console.log(headers);
-  //headers.unshift('status')
+
+
+  // set status_display as first
+  const columns = [{
+    data: 'status_display',
+    renderer: 'text',
+    readOnly: true
+  }];
+  const headers = ['status_display'];
+
+  for (let x in columnState) {
+    if (columnState[x].checked) {
+      headers.push(x);
+      columns.push({
+        data: x,
+        renderer: 'text',
+        readOnly: x.indexOf(['filename']) >= 0 ? true : false,
+      });
+    }
+  }
 
   const settings = {
     data: data,
-    colHeaders: HEADERS,
+    colHeaders: headers,
     rowHeaders: true,
     licenseKey: 'non-commercial-and-evaluation',
     colWidths: [60, 200, 200, 150, 150],
-    columns: [
-      {data: 'status_display', renderer: 'text', readOnly: true},
-      {data: 'filename', renderer: 'text', readOnly: true},
-      {data: 'datetime', renderer: 'text'},
-      {data: 'species', renderer: 'text'},
-      {data: 'lifestage', renderer: 'text'},
-    ],
+    columns: columns,
     afterChange: updateData,
     afterSelectionEnd: onRowClick,
   };
