@@ -52,7 +52,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
   for (let i=0;i<confColumnLabels.length;i++) {
     const v = confColumnLabels[i].split(':');
     //if v[0] in ['']
-    console.log(v[0],'----');
+    //console.log(v[0],'----');
     initColumnState[v[0]] = {
       key: v[0],
       label: v[1],

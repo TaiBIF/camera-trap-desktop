@@ -69,9 +69,7 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     const d = new Date(v[3] * 1000);
     // cast datetime string
     const dateTime = `${d.getFullYear()}-${d.getMonth().toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
-    //return [v[2], v[1], dateTime, lifestage, sex];
-    //console.log('xxx', v[5]);
-    console.log(columnState, 'xxxx');
+    //console.log(columnState, 'xxxx');
     return {
       image_id: v[0],
       status_display: STATUS_MAP[v[5]],
@@ -137,11 +135,11 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     renderer: 'text',
     readOnly: true
   }];
-  const headers = ['status_display'];
+  const headers = ['status'];
 
   for (let x in columnState) {
     if (columnState[x].checked) {
-      headers.push(x);
+      headers.push(columnState[x].label);
       columns.push({
         data: x,
         renderer: 'text',
