@@ -6,14 +6,15 @@
   "scripts": {
     "electron": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev:electron": "cross-env NODE_ENV=development webpack --config webpack.electron.config.js --mode development && electron .",
+    "dev:electron": "cross-env NODE_ENV=development webpack --config webpack.electron.config.js --mode development;electron .",
     "dev:react": "cross-env NODE_ENV=development webpack serve --config webpack.react.config.js --mode development",
     "build:electron": "cross-env NODE_ENV=production webpack --config webpack.electron.config.js --mode production",
     "build:react": "cross-env NODE_ENV=production webpack --config webpack.react.config.js --mode production",
     "build": "npm run build:electron && npm run build:react",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "packager": "electron-packager . camera-trap-desktop --platform=win32 --arch=x64 --out=../out --overwrite --asar"
+    "packager": "electron-packager . camera-trap-desktop --platform=win32 --arch=x64 --out=../out --overwrite --asar",
+    "package-py-win": ".\\py-script\\venv\\Scripts\\activate.ps1; pyinstaller.exe --onefile -F .\\py-script\\main.py --distpath .\\ --clean"
   },
   "author": "",
   "license": "ISC",
@@ -40,6 +41,7 @@
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.57",
     "handsontable": "^8.3.2",
+    "node": "^14.16.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   }

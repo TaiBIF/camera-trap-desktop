@@ -1,8 +1,10 @@
 const util = require('util');
 import { runCommand } from './adapters/command';
 
+const INI_FILE = 'camera-trap-desktop.ini';
+
 const loadConfig = async() => {
-  return await runCommand(`main.exe -i camera-trap-desktop.ini -o json`, true);
+  return await runCommand(`main.exe -i ${INI_FILE} -o json`, true);
 }
 const getSource = async(db_file, source_id, with_image) => {
   if (with_image) {
@@ -22,6 +24,10 @@ const saveAnnotation = async(db_file, data) => {
 const updateImage = async(db_file, data, resource_id) => {
   return await runCommand(`main.exe -d ${db_file} -r image -a update -v ${data} -k ${resource_id} -o json`, true);
 }
+
+const uploadSource = async(db_file, source_id) => {
+  return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a batch-upload -k ${source_id} -o json`, true);
+}
 /*
 const getImageList = async(db_file, source_id) => {
   return await runCommand(`main.exe -d ${db_file} -r image -a get -k ${source_id} -o json`, true);
@@ -34,4 +40,5 @@ export {
   deleteSource,
   saveAnnotation,
   updateImage,
+  uploadSource,
 }

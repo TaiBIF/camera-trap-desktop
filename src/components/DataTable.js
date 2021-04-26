@@ -28,6 +28,9 @@ const useStyles = makeStyles({
   container: {
     /*maxHeight: 440,*/
   },
+  button: {
+    margin: '10px 20px 0 0',
+  }
 });
 
 //import {CellEditor} from './CellEditor';
@@ -53,7 +56,7 @@ const getStatus = (x) => {
 }
 
 const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
-
+  const classes = useStyles();
   //console.log('render DataTable', rowsInPage);
   //React.useEffect(() => {
   const tmp = rowsInPage.map((v) => {
@@ -96,6 +99,10 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     }
     return td
   }
+
+  //const handleUpload = (e) => {
+  //  console.log(rowsInPage);
+  //}
 
   const updateData = (changes) => {
     if (changes) {
@@ -162,14 +169,16 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
   return (
       <>
       <HotTable id="ct-hot" settings={settings} />
-      <Button variant="contained" color="primary" onClick={(e)=> onSave(e, data)}>save</Button>
+      <Button variant="contained" color="primary" onClick={(e)=> onSave(e, data)} className={classes.button}>save</Button>
       </>
   )
 }
+//<Button variant="contained" color="secondary" onClick={handleUpload} className={classes.button}>Upload</Button>
+
 /*
 const DataTableMui = ({rowsInPage, count, onSave, onRowcol}) => {
 
-  const classes = useStyles();
+
 
   const ImageRows = ({rows}) => (
     rows.map(
