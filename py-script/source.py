@@ -44,26 +44,42 @@ class Source(object):
         sql = 'UPDATE image SET {} WHERE image_id={}'.format(put, image_id)
         self.db.exec_sql(sql, True)
 
+    def upload_image(self, image_id):
+        sql = 'UPDATE image SET status="S" WHERE image_id={}'.format(image_id)
+        #upload_to_s3(aws_conf, file_name, object_name)
+        #self.db.exec_sql(sql, True)
+        time.sleep(5)
+        ## TODO: update state
+        return 'image_id: {} uploaded'.format(image_id)
+
+    def prepare_upload(self, source_id):
+        res = self.get_source(source_id, 'un-upload')
+        ## TODO: update state
+        return res
+
     def batch_upload(self, aws_conf, source_id):
-        res = self.get_source(source_id, True)
+        res = self.get_source(source_id, 'all')
         for i in res['image_list']:
             file_name = i[1]
             # TODO
             object_name = '{}/{}/{}-{}.jpg'.format('foo-proj', 'foo-studyarea', 'foo-cameralocation', i[0])
             upload_to_s3(aws_conf, file_name, object_name)
         return res
-    def get_source(self, source_id='', with_image=False):
+    def get_source(self, source_id='', mode=''):
         if source_id == '' or source_id == '0':
             return self.db.fetch_sql_all('SELECT * FROM source')
         else:
             res = self.db.fetch_sql('SELECT * FROM source WHERE source_id={}'.format(source_id))
             images = []
-            if with_image:
+            if mode == 'all':
                 images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={}'.format(source_id))
+            elif mode == 'un-upload':
+                images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={} AND status != "U"'.format(source_id))
 
             return {
                 'source': res,
-                'image_list': images
+                'image_list': images,
+                'mode': mode,
             }
 
     def delete_source(self, source_id):

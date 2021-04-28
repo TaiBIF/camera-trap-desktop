@@ -28,6 +28,12 @@ const updateImage = async(db_file, data, resource_id) => {
 const uploadSource = async(db_file, source_id) => {
   return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a batch-upload -k ${source_id} -o json`, true);
 }
+const prepareUploadSource = async(db_file, source_id) => {
+  return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a prepare-upload -k ${source_id} -o json`, true);
+}
+const uploadImage = async(db_file, image_id) => {
+  return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a upload-image -k ${image_id} -o json`, true);
+}
 /*
 const getImageList = async(db_file, source_id) => {
   return await runCommand(`main.exe -d ${db_file} -r image -a get -k ${source_id} -o json`, true);
@@ -41,4 +47,6 @@ export {
   saveAnnotation,
   updateImage,
   uploadSource,
+  prepareUploadSource,
+  uploadImage,
 }

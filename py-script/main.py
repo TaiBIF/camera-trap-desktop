@@ -33,6 +33,8 @@ ACTION_CHOICES = [
     'get',
     'delete',
     'batch-upload',
+    'prepare-upload',
+    'upload-image',
 ]
 
 #sys.stdout.reconfigure(encoding='utf-8')
@@ -45,12 +47,21 @@ def main(args):
         #'foo': '中文',
     }
 
-    if args.action == 'batch-upload' and args.resource_id and args.ini_file and args.db_file:
+    if args.action == 'upload-image' and args.db_file and args.resource_id:
         src = Source('database', name=args.db_file)
-        config = Config(args.ini_file)
-        aws_conf = config.get_config()['AWSConfig']
-        res = src.batch_upload(aws_conf, args.resource_id)
+        res = src.upload_image(args.resource_id)
         result['data'] = res
+    elif args.action == 'prepare-upload' and args.db_file:
+        src = Source('database', name=args.db_file)
+        res = src.prepare_upload(args.resource_id)
+        result['data'] = res
+    elif args.action == 'batch-upload' and args.resource_id and args.ini_file and args.db_file:
+        #src = Source('database', name=args.db_file)
+        #config = Config(args.ini_file)
+        #aws_conf = config.get_config()['AWSConfig']
+        #res = src.batch_upload(aws_conf, args.resource_id)
+        #result['data'] = res
+        result['data'] = 'okk {}'.format(args.resource_id)
     elif args.action == 'get-config' or \
        (args.ini_file and not args.set_config_value):
         config = Config(args.ini_file)
@@ -86,7 +97,10 @@ def main(args):
             elif args.action == 'get':
                 # load source
                 #src = Source('database', name=args.db_file)
-                res = src.get_source(args.resource_id, args.image)
+                if args.image:
+                    res = src.get_source(args.resource_id, 'all')
+                else:
+                    res = src.get_source(args.resource_id)
                 result['data'] = res
         else:
             print ('do nothing')

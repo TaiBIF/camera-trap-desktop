@@ -45,7 +45,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-export default function SourceItem({data}) {
+export default function SourceItem({data, onDelete, onUpload}) {
   const classes = useStyles();
   const v = data;
 
@@ -73,7 +73,7 @@ export default function SourceItem({data}) {
        component="label"
        size="small"
        className={classes.cardFooter}
-       onClick={(e) => handleDelete(e, v[0])}
+       onClick={(e) => onDelete(e, v[0])}
        >刪除
        </Button>
        </Grid>
@@ -84,7 +84,7 @@ export default function SourceItem({data}) {
        size="small"
        color="primary"
        className={classes.cardFooter}
-       onClick={(e) => handleUpload(e, v[0])}
+       onClick={(e) => onUpload(e, v[0])}
        >上傳
        </Button>
        </Grid>
