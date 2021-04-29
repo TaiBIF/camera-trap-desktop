@@ -120,6 +120,8 @@ class ClamImage(object):
     def get_exif(self):
         exif = {}
         tags = ExifTags.TAGS
+        if not self.pil_handle._getexif():
+            return exif
         for k, v in self.pil_handle._getexif().items():
             if k in tags:
                 t = tags[k]

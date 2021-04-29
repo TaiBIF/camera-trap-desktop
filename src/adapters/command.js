@@ -22,7 +22,12 @@ async function runCommand(command, isJson){
 
   if (stdout) {
     if (isJson) {
-      return JSON.parse(stdout);
+      try {
+        return JSON.parse(stdout);
+      } catch(e) {
+        console.error(e);
+        console.log('python stdout', stdout);
+      }
     } else {
       return stdout;
     }

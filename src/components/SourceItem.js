@@ -27,7 +27,7 @@ const useStyles = makeStyles((theme) => ({
   cardItem: {
     padding: theme.spacing(2),
     //textAlign: 'center',
-    height: '100%',
+    height: '85%',
     color: theme.palette.text.secondary,
     '&:hover': {
       background: "#f1f1f1",

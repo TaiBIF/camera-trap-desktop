@@ -182,8 +182,9 @@ class Source(object):
         #thumpy = Thumpy(thumb_dir, dir_path, is_debug)
         exist = self.db.fetch_sql("SELECT * FROM source WHERE path='{}'".format(path))
         if exist:
-            print ('path added', exist)
-            return []
+            #print ('path added', exist)
+            ret = self.db.fetch_sql_all('SELECT * FROM source')
+            return ret
 
         with os.scandir(path) as it:
             image_list = []
