@@ -60,7 +60,8 @@ const checkUploadState = (row, uploading, isClicked) => {
     ret.color = 'secondary';
     ret.title = '上傳中';
   } else {
-    if (row[7] > 0 & !isClicked) {
+    if (row[6] === 'I' && !isClicked) {
+    //if ((!isClicked & row.length <=8) & row[7] > 0) {
 
     } else {
       ret.state = 'uploaded'

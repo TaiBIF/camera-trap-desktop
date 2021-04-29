@@ -28,6 +28,8 @@ const updateImage = async(db_file, data, resource_id) => {
 const uploadSource = async(db_file, source_id) => {
   return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a batch-upload -k ${source_id} -o json`, true);
 }
+
+// for child.pid
 const uploadSourceCallback = (db_file, source_id) => {
   return runCommandCallback(`main.exe -d ${db_file} -i ${INI_FILE} -a batch-upload -k ${source_id} -o json`, true);
 }

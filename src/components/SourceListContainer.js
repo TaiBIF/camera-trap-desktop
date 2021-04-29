@@ -22,7 +22,7 @@ import {
 import SourceItem from './SourceItem';
 
 
-const POLLING_INTERVAL = 3000;
+const POLLING_INTERVAL = 2000;
 
 const useStyles = makeStyles((theme) => ({
   progress: {

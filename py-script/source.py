@@ -65,14 +65,24 @@ class Source(object):
         res = self.get_source(source_id, 'un-upload')
         for i in res['image_list']:
             file_name = i[1]
-            # TODO
             sql = 'UPDATE image SET status="S" WHERE image_id={}'.format(i[0])
             self.db.exec_sql(sql, True)
-            time.sleep(3)
+            #time.sleep(3)
+            img = ClamImage(file_name)
+            img_hash = img.make_hash()
+            object_name = '{}/{}/{}/{}-{}-{}.jpg'.format(
+                'foo-proj',
+                'foo-studyarea',
+                'foo-cameralocation',
+                img_hash,
+                source_id,
+                i[0],
+            )
+            upload_to_s3(aws_conf, file_name, object_name)
             sql = 'UPDATE image SET status="U" WHERE image_id={}'.format(i[0])
             self.db.exec_sql(sql, True)
-            object_name = '{}/{}/{}-{}.jpg'.format('foo-proj', 'foo-studyarea', 'foo-cameralocation', i[0])
-            #upload_to_s3(aws_conf, file_name, object_name)
+        sql = 'UPDATE source SET status="U" WHERE source_id={}'.format(source_id)
+        self.db.exec_sql(sql, True)
         res['foo'] = 'total upload!'
         return res
     def get_source(self, source_id='', mode=''):

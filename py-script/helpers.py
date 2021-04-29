@@ -14,6 +14,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 def upload_to_s3(aws_conf, file_name, object_name):
+
     s3_client = boto3.client(
         's3',
         aws_access_key_id=aws_conf['access_key_id'],
@@ -140,8 +141,10 @@ class ClamImage(object):
     def get_stat(self):
         return self.entity.stat()
 
-    def make_hash(self, path):
-        with open(path, 'rb') as file:
+    def make_hash(self):
+        with open(self.entity, 'rb') as file:
+            h = hashlib.new('md5')
+
             while True:
                 # Reading is buffered, so we can read smaller chunks.
                 chunk = file.read(h.block_size)
