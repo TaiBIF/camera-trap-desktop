@@ -55,6 +55,14 @@ CREATE TABLE IF NOT EXISTS image (
   FOREIGN KEY (source_id) REFERENCES source(source_id)
 );'''
 
+SQL_INIT_TASK = '''
+CREATE TABLE IF NOT EXISTS image (
+  task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created INTEGER,
+  source_id INTEGER,
+  FOREIGN KEY (source_id) REFERENCES source(source_id)
+);'''
+
 class Database(object):
     db_file = ''
     conn = None

@@ -47,27 +47,46 @@ class Source(object):
     def upload_image(self, image_id):
         sql = 'UPDATE image SET status="S" WHERE image_id={}'.format(image_id)
         #upload_to_s3(aws_conf, file_name, object_name)
-        #self.db.exec_sql(sql, True)
+        self.db.exec_sql(sql, True)
         time.sleep(5)
         ## TODO: update state
         return 'image_id: {} uploaded'.format(image_id)
 
-    def prepare_upload(self, source_id):
-        res = self.get_source(source_id, 'un-upload')
+    def prepare_upload(self, source_id_str):
+        source_list = source_id_str.split(',')
+        res = {}
+        for i in source_list:
+            x = self.get_source(i, 'uploaded')
+            res[i] = len(x['image_list'])
         ## TODO: update state
         return res
 
     def batch_upload(self, aws_conf, source_id):
-        res = self.get_source(source_id, 'all')
+        res = self.get_source(source_id, 'un-upload')
         for i in res['image_list']:
             file_name = i[1]
             # TODO
+            sql = 'UPDATE image SET status="S" WHERE image_id={}'.format(i[0])
+            self.db.exec_sql(sql, True)
+            time.sleep(3)
+            sql = 'UPDATE image SET status="U" WHERE image_id={}'.format(i[0])
+            self.db.exec_sql(sql, True)
             object_name = '{}/{}/{}-{}.jpg'.format('foo-proj', 'foo-studyarea', 'foo-cameralocation', i[0])
-            upload_to_s3(aws_conf, file_name, object_name)
+            #upload_to_s3(aws_conf, file_name, object_name)
+        res['foo'] = 'total upload!'
         return res
     def get_source(self, source_id='', mode=''):
         if source_id == '' or source_id == '0':
-            return self.db.fetch_sql_all('SELECT * FROM source')
+            # SQL 無法 select 出 group count 等於 0 的 source
+            res = self.db.fetch_sql_all('SELECT * FROM source')
+            res_new = []
+            for i in res:
+                sid = i[0]
+                rex = self.db.fetch_sql('SELECT COUNT(*) FROM image WHERE source_id={} AND status != "U" GROUP BY source_id'.format(sid))
+                r = list(i)
+                r.append(rex[0] if rex else 0)
+                res_new.append(r)
+            return res_new
         else:
             res = self.db.fetch_sql('SELECT * FROM source WHERE source_id={}'.format(source_id))
             images = []
@@ -75,6 +94,8 @@ class Source(object):
                 images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={}'.format(source_id))
             elif mode == 'un-upload':
                 images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={} AND status != "U"'.format(source_id))
+            elif mode == 'uploaded':
+                images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={} AND status = "U"'.format(source_id))
 
             return {
                 'source': res,

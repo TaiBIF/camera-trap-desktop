@@ -1,11 +1,13 @@
 const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+const child_process = require('child_process');
+const exec = util.promisify(child_process.exec);
+
+const pyVenvMain = '.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py';
 
 async function runCommand(command, isJson){
   //console.log(__dirname, command);
-  const pyVenvMain = '.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py';
   const command_ = command.replace('main.exe', pyVenvMain);
-  //console.log(command, '|', new_cmd);
+
   const {error, stdout, stderr} = await exec(command_);
 
   if (error) {
@@ -27,4 +29,32 @@ async function runCommand(command, isJson){
   }
 }
 
-export {runCommand}
+const runCommandCallback = (command, isJson) => {
+  const command_ = command.replace('main.exe', pyVenvMain);
+
+  const child = child_process.exec(
+    command_,
+    ((error, stdout, stderr) => {
+      if (error) {
+        console.error(`error: ${error.message}`);
+        return;
+      }
+
+      if (stderr) {
+        console.error(`stderr: ${stderr}`);
+        return;
+      }
+
+      if (stdout) {
+        if (isJson) {
+          return JSON.parse(stdout);
+        } else {
+          return stdout;
+        }
+      }
+  }));
+
+  return child
+
+}
+export {runCommand, runCommandCallback}

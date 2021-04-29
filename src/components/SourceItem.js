@@ -11,14 +11,14 @@ import Box from '@material-ui/core/Box';
 const LinearProgressWithLabel = (props) => {
   return (
     <Box display="flex" alignItems="center">
-      <Box width="100%" mr={1}>
-        <LinearProgress variant="determinate" {...props} />
-      </Box>
-      <Box minWidth={35}>
-        <Typography variant="body2" color="textSecondary">{`${Math.round(
+    <Box width="100%" mr={1}>
+    <LinearProgress variant="determinate" {...props} />
+    </Box>
+    <Box minWidth={35}>
+    <Typography variant="body2" color="textSecondary">{`${Math.round(
           props.value,
         )}%`} {`${props.title}`}</Typography>
-      </Box>
+    </Box>
     </Box>
   );
 }
@@ -27,6 +27,7 @@ const useStyles = makeStyles((theme) => ({
   cardItem: {
     padding: theme.spacing(2),
     //textAlign: 'center',
+    height: '100%',
     color: theme.palette.text.secondary,
     '&:hover': {
       background: "#f1f1f1",
@@ -45,58 +46,93 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-export default function SourceItem({data, onDelete, onUpload}) {
-  const classes = useStyles();
-  const v = data;
+const checkUploadState = (row, uploading, isClicked) => {
+  //{progress && progress.value == 100 ? true : false}
+  const ret = {
+    state: 'init',
+    variant: 'contained',
+    color: 'primary',
+    title: '上傳',
+  }
 
-  const uploadProgress = (data[6] === 'I' ) ? 0 : 100;
-  const uploadProgressTitle = `(0/${data[4]})`;
-  return (
-       <Grid item sm={3}>
-       <Paper className={classes.cardItem} onClick={(e) => onChangeView(e, 'image-list', v[0])}>
-       <Grid container>
-       <Grid item sm={12}>
-       <Typography gutterBottom variant="h6" color="textPrimary">
-       {v[3]} ({v[4]})
-       </Typography>
-       <Typography variant="body2" gutterBottom>
-       </Typography>
-       <Typography variant="body2" color="textSecondary">
-       {v[2]}
-       </Typography>
-       </Grid>
-       </Grid>
-       <Grid container justify="space-between">
-       <Grid item sm={3}>
-       <Button
-       variant="contained"
-       component="label"
-       size="small"
-       className={classes.cardFooter}
-       onClick={(e) => onDelete(e, v[0])}
-       >刪除
-       </Button>
-       </Grid>
-       <Grid item sm={3}>
-       <Button
-       variant="contained"
-       component="label"
-       size="small"
-       color="primary"
-       className={classes.cardFooter}
-       onClick={(e) => onUpload(e, v[0])}
-       >上傳
-       </Button>
-       </Grid>
-       </Grid>
-       <Grid container>
-       <Grid item>
-       </Grid>
-       <div className={classes.cardProgress}>
-       <LinearProgressWithLabel value={uploadProgress} title={uploadProgressTitle}/>
-       </div>
-       </Grid>
-       </Paper>
-    </Grid>
-  )
+  if (uploading) {
+    ret.state = 'uploading';
+    ret.color = 'secondary';
+    ret.title = '上傳中';
+  } else {
+    if (row[7] > 0 & !isClicked) {
+
+    } else {
+      ret.state = 'uploaded'
+      ret.title = '已上傳';
+      ret.variant = 'outlined';
+      ret.color = 'default';
+    }
+  }
+  return ret;
 }
+
+  export default function SourceItem({data, onDelete, onUpload, progress}) {
+    const classes = useStyles();
+    const v = data;
+    //const uploadProgress = (data[6] === 'I' ) ? 0 : 100;
+    //const uploadProgressTitle = `(${uploadQueue}/${data[4]})`;
+    const [isUploading, setIsUploading] = React.useState(false);
+    const [isClickUpload, setIsClickUpload] = React.useState(false);
+
+    const clickUploadButton = (e, v) => {
+      e.stopPropagation();
+      setIsUploading(true);
+      setIsClickUpload(true);
+      onUpload(e, v[0]);
+    }
+
+    if (isUploading && progress === null) {
+      setIsUploading(false);
+    }
+    const uploadState = checkUploadState(v, isUploading, isClickUpload);
+
+    return (
+      <Paper className={classes.cardItem}>
+      <Grid container>
+      <Grid item sm={12}>
+      <Typography gutterBottom variant="h6" color="textPrimary">
+      {v[3]} ({v[4]})
+      </Typography>
+      <Typography variant="body2" gutterBottom>
+      </Typography>
+      <Typography variant="body2" color="textSecondary">
+      {v[2]}
+      </Typography>
+      </Grid>
+      </Grid>
+      <Grid container justify="space-between" alignItems="stretch">
+      <Grid item sm={3}>
+      <Button
+      variant="outlined"
+      component="label"
+      size="small"
+      className={classes.cardFooter}
+      onClick={(e) => onDelete(e, v[0])}
+      >刪除
+      </Button>
+      </Grid>
+      <Grid item sm={3}>
+      <Button
+      variant={uploadState.variant}
+      component="label"
+      size="small"
+      color={uploadState.color}
+      className={classes.cardFooter}
+      onClick={(e) => clickUploadButton(e, v)}
+      >{uploadState.title}
+      </Button>
+      </Grid>
+      </Grid>
+      <div className={classes.cardProgress}>
+      {progress ?
+       <LinearProgressWithLabel value={progress.value} title={progress.title}/> : null}
+      </div>
+      </Paper>
+    )
+  }

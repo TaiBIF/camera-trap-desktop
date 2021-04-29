@@ -7,6 +7,7 @@ import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import { SnackbarProvider, useSnackbar } from 'notistack';
 
 import { ConfigContext } from '../app';
 import {
@@ -14,10 +15,14 @@ import {
   getSource,
   deleteSource,
   uploadSource,
+  uploadSourceCallback,
   prepareUploadSource,
   uploadImage,
 } from '../utils'
 import SourceItem from './SourceItem';
+
+
+const POLLING_INTERVAL = 3000;
 
 const useStyles = makeStyles((theme) => ({
   progress: {
@@ -36,6 +41,61 @@ const useStyles = makeStyles((theme) => ({
 
 export default function SourceListContainer({onChangeView}) {
   const classes = useStyles();
+  const config = React.useContext(ConfigContext);
+  //const { enqueueSnackbar } = useSnackbar();
+  const providerRef = React.useRef();
+
+  const [uploadQueue, setUploadQueue] = React.useState([]); // sourceID
+  const [sourceLoaded, setSourceLoaded] = React.useState(false);
+  const [sourceList, setSourceList] = React.useState([]);
+  const [counter, setCounter] = React.useState(0);
+
+  if (counter > 0 && uploadQueue.length === 0) {
+    setCounter(0);
+  }
+
+  React.useEffect(() => {
+    //console.log('init');
+    //console.time('boot')
+
+    getSource(config.SQLite.dbfile, '0').then((res)=>{
+      setSourceLoaded(true);
+      console.log(res);
+      //console.timeLog('boot')
+      setSourceList(res['data']);
+      //console.timeEnd('boot')
+    });
+
+  }, []);
+
+  React.useEffect( () => {
+    if(counter && uploadQueue.length > 0) {
+      const sources = uploadQueue.map((x)=>x.sourceID).join(',');
+      prepareUploadSource(config.SQLite.dbfile, sources).then((res)=>{
+        console.log('poll res:', res['data']);
+        setUploadQueue((ps)=>{
+          for (let i in res['data']) {
+            const idx = ps.findIndex((x)=> parseInt(x.sourceID, 10) === parseInt(i, 10));
+            if (idx >= 0) {
+              ps[idx].count = res['data'][i];
+            }
+          }
+          return ps;
+        });
+        setSourceList((ps)=>{
+          for (let i in res['data']) {
+            const idx = ps.findIndex((x)=> parseInt(x[0], 10) === parseInt(i, 10));
+            if (idx >= 0) {
+              ps[idx][8] = res['data'][i];
+            }
+          }
+          return ps;
+        });
+      });
+      var timer = setTimeout(() => setCounter(counter + 1), POLLING_INTERVAL);
+    }
+    return () => clearTimeout(timer);
+  }, [counter]);
 
   const handleDelete = (e, source_id) => {
     e.stopPropagation();
@@ -46,96 +106,34 @@ export default function SourceListContainer({onChangeView}) {
     }
   };
 
-  /*
-  const refresh = () => {
-    console.log('refre', uploading);
-    if (uploading) {
-      setTimeout(refresh, 2000);
-      console.log('refresh', count);
-    }
-  }
-  */
-  const [uploadQueueIndex, setUploadQueueIndex] = React.useState(0);
-  const [uploadQueue, setUploadQueue] = React.useState([]);
-  const [sourceLoaded, setSourceLoaded] = React.useState(false);
-  const [sourceList, setSourceList] = React.useState([]);
-
-
-  const config = React.useContext(ConfigContext);
-
-  React.useEffect(() => {
-    console.log('init');
-    console.time('boot')
-
-    getSource(config.SQLite.dbfile, '0').then((res)=>{
-      setSourceLoaded(true);
-      console.log(res);
-      console.timeLog('boot')
-      setSourceList(res['data']);
-      console.timeEnd('boot')
-    });
-  }, []);
-
-
-
-  React.useEffect(() => {
-    console.log('qqqqqqq', uploadQueue);
-    const processQueue = async (queue) => {
-      console.log(queue)
-      for (const q of queue['imageList']) {
-        const res = await uploadImage(config.SQLite.dbfile, q[0]);
-        console.log(res, uploadQueueIndex);
-      }
-    }
-    if (uploadQueue.length) {
-      processQueue(uploadQueue.pop())
-    }
-  }, [uploadQueue]);
-
-  /*
-  React.useEffect(() => {
-    console.log('qqqqqqq', uploadQueue);
-    if (uploadQueue.length === 1) {
-      console.log('start upload', uploadQueue[0]);
-      const sourceData = sourceList[uploadQueue[0]];
-      prepareUploadSource(config.SQLite.dbfile, sourceData[0]).then((res)=>{
-        console.log('prepare', res);
-
-        uploadSource(config.SQLite.dbfile, sourceData[0]).then((res)=>{
-          console.log('uploaded', res);
-          setUploadQueue((ps)=>{
-            ps.splice(0, 1);
-            console.log(ps);
-            return ps
-          });
-        });
-      });
-      //const sourceList[uploadQueue[0]][4];
-    }
-  }, [uploadQueue]);
-  */
   const handleUpload = (e, sourceID) => {
     e.stopPropagation();
-    //const updateSourceStatus = (uploadQueue.length === 0) ? 'U' : 'P';
-    //set
-    //uploadSource(config.SQLite.dbfile, source_id).then((res)=>{
-      //setSourceList(res['data']);
-     // console.log(res);
-    //});
-    const sourceIndex = sourceList.findIndex(x=>x[0] === sourceID);
 
+    // start polling
+    setCounter(counter+1);
+    const child = uploadSourceCallback(config.SQLite.dbfile, sourceID);
 
-    const sourceData = sourceList[sourceIndex];
-      prepareUploadSource(config.SQLite.dbfile, sourceData[0]).then((res)=>{
-        console.log('prepare', res);
-        //setUploadQueue((ps) => ps.concat(res['data']['image_list']));
-        setUploadQueue((ps) => [...ps, {
-          sourceID: sourceData[0],
-          imageList: res['data']['image_list'],
-        }]);
-      });
-    //setUploadQueue((ps)=> [...ps, sourceIndex]);
+    setUploadQueue((ps)=>[...ps, {
+      sourceID: sourceID,
+      pid: child.pid,
+      count: 0,
+    }]);
+    setSourceList((ps)=> {
+      const ret = ps.map((x)=> [...x, 0]);
+      return ret;
+    })
   };
+
+  const handleCancelButton = (e) => {
+    //child.kill();
+    // windows need do this
+    for (let q of uploadQueue) {
+      var spawn = require('child_process').spawn;
+      spawn('taskkill', ['/pid', q.pid, '/f', '/t']);
+    }
+    setCounter(0);
+    setUploadQueue([]);
+  }
 
   const handleAddButton = (e) => {
     if (e.target.files.length) {
@@ -150,18 +148,60 @@ export default function SourceListContainer({onChangeView}) {
         setSourceList(res['data']);
         setSourceLoaded(true);
       });
-      //const folderName = newPath.split(path.sep).pop();
-      //const dbFile = setting.section.SQLite.dbfile;
-      //const thumbDir = setting.section.Thumbnail.destination;
     }
   }
 
   //console.log(sourceList);
-  console.log('render | ', uploadQueue);
+  console.log('render |', uploadQueue);
+
+  const getUploadProgress = (source) => {
+    if (uploadQueue.length > 0) {
+      const qIndex = uploadQueue.findIndex((x)=> parseInt(x.sourceID, 10) === parseInt(source[0], 10));
+      const q = uploadQueue[qIndex];
+
+      if (q) {
+        if (q.count === source[4]) {
+          // finish batch upload
+          setUploadQueue((ps)=> {
+            ps.splice(qIndex, 1);
+            return ps
+          });
+          providerRef.current.enqueueSnackbar(`${source[3]} | 上傳完成`, { variant:'success' });
+          return {
+            count: q.count,
+            total: source[4],
+            title: `${q.count}/${source[4]}`,
+            value: (q.count / source[4]) * 100,
+            done: true,
+          };
+        }
+        return {
+          count: q.count,
+          total: source[4],
+          title: `${q.count}/${source[4]}`,
+          value: (q.count / source[4]) * 100,
+        };
+      }
+    } else {
+      setCounter(0);
+    }
+    return null
+  }
+
   return (
     <div className={classes.root}>
     <Grid container spacing={3} direction="row" justify="space-between" alignItems="flex-end">
     <Grid item sm={6}><Typography variant="h3" component="h1" color="textSecondary">影像來源目錄</Typography>
+    </Grid>
+    <Grid item sm={2}>
+    {/*
+    <Button
+    variant="contained"
+    component="label"
+    onClick={handleCancelButton}
+    >
+    cancel upload
+    </Button>*/}
     </Grid>
     <Grid item sm={2} className={classes.cardAddButton}>
     <Button
@@ -180,14 +220,18 @@ export default function SourceListContainer({onChangeView}) {
     </Grid>
     </Grid>
     <hr />
-    <Grid container spacing={3} className={classes.cardContainer}>
+    <SnackbarProvider maxSnack={3} ref={providerRef}>
+    <Grid container spacing={3} className={classes.cardContainer} alignItems="stretch">
     {sourceLoaded ?
      sourceList.map((v, i) => (
-       <SourceItem data={v} key={i} onDelete={handleDelete} onUpload={handleUpload} />
+       <Grid item sm={3} key={i} onClick={(e)=>onChangeView(e, 'image-list', v[0])}>
+       <SourceItem data={v} onDelete={handleDelete} onUpload={handleUpload} progress={uploadQueue.length > 0 ? getUploadProgress(v) : null} />
+       </Grid>
        ))
    : <div className={classes.progress}><LinearProgress /></div>
     }
     </Grid>
+    </SnackbarProvider>
     </div>
   )
 }
