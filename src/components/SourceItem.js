@@ -8,6 +8,10 @@ import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Box from '@material-ui/core/Box';
 
+import Chip from '@material-ui/core/Chip';
+import LocationOnIcon from '@material-ui/icons/LocationOn';
+import Tooltip from '@material-ui/core/Tooltip';
+
 const LinearProgressWithLabel = (props) => {
   return (
     <Box display="flex" alignItems="center">
@@ -43,6 +47,12 @@ const useStyles = makeStyles((theme) => ({
   cardProgress: {
     marginTop: theme.spacing(1),
     width: '100%',
+  },
+  chipList: {
+    display: 'flex',
+    '& > *': {
+      marginRight: theme.spacing(0.5),
+    }
   }
 }));
 
@@ -92,11 +102,17 @@ const checkUploadState = (row, uploading, isClicked) => {
       setIsUploading(false);
     }
     const uploadState = checkUploadState(v, isUploading, isClickUpload);
+    const desc = JSON.parse(data[7]);
+    const chipList = <div className={classes.chipList}>
+    <Tooltip title={desc.project_name}><Chip label="計劃" color="primary" key={desc.project_name} /></Tooltip>
+    <Chip label={`${desc.studyarea_name} / ${desc.deployment_name}`} icon=<LocationOnIcon /> color="primary" variant="outlined" key={desc.deployment_name} />
+    </div>;
 
     return (
       <Paper className={classes.cardItem}>
       <Grid container>
       <Grid item sm={12}>
+      { v[7] ? chipList : null}
       <Typography gutterBottom variant="h6" color="textPrimary">
       {v[3]} ({v[4]})
       </Typography>

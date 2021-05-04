@@ -1,4 +1,6 @@
-const { app, protocol, BrowserWindow, Menu } = require('electron')
+const { app, protocol, BrowserWindow, Menu, ipcMain } = require('electron')
+import axios from 'axios'
+
 import * as path from "path";
 import * as url from "url";
 
@@ -34,6 +36,14 @@ app.whenReady().then(() => {
     //console.log(request.url)
     const url = decodeURIComponent(request.url.substr(7));
     callback({ path: url })
+  })
+
+  // instead of fetch
+  ipcMain.handle('request', async (_, url) => {
+    const result = await axios.get(url);
+    //console.log('main: auth result', result)
+    //console.log('main: auth result.data', result.data)
+    return result.data
   })
 })
 

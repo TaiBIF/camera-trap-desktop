@@ -18,6 +18,7 @@ from helpers import (
     ClamImage,
     Database,
     upload_to_s3,
+    post_to_server,
 )
 
 IGNORE_FILES = ['Thumbs.db', '']
@@ -37,6 +38,12 @@ class Source(object):
         if source_type == 'database' and name:
             db = Database(name)
             self.db = db
+
+    def update_description(self, source_id, value):
+        x = json.loads(value)
+        sql = "UPDATE source SET description='{}' WHERE source_id={}".format(json.dumps(x), source_id)
+        self.db.exec_sql(sql, True)
+        return sql
 
     def update_image(self, image_id, value):
         kv = value.split('=')
@@ -61,7 +68,15 @@ class Source(object):
         ## TODO: update state
         return res
 
-    def batch_upload(self, aws_conf, source_id):
+    def upload_annotation(self, config, source_id):
+        res = self.get_source(source_id, 'un-upload')
+        now = int(time.time())
+        payload = [[x[0], x[7]] for x in res['image_list']]
+
+        res_server = post_to_server(config['Server'], payload)
+        return res_server
+
+    def batch_upload(self, config, source_id, server_image_info):
         res = self.get_source(source_id, 'un-upload')
         for i in res['image_list']:
             file_name = i[1]
@@ -78,13 +93,26 @@ class Source(object):
                 source_id,
                 i[0],
             )
-            upload_to_s3(aws_conf, file_name, object_name)
+            upload_to_s3(config['AWSConfig'], file_name, object_name)
             sql = 'UPDATE image SET status="U" WHERE image_id={}'.format(i[0])
             self.db.exec_sql(sql, True)
+
         sql = 'UPDATE source SET status="U" WHERE source_id={}'.format(source_id)
         self.db.exec_sql(sql, True)
+
+        #for i in server_image_info:
+        
         res['foo'] = 'total upload!'
+
+        # post to server
+        source = self.get_source(source_id, 'all')
+        payload = {
+            'source_id': source_id, # TODO
+            'image_list': [],
+        }
+
         return res
+
     def get_source(self, source_id='', mode=''):
         if source_id == '' or source_id == '0':
             # SQL 無法 select 出 group count 等於 0 的 source

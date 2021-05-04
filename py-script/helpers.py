@@ -2,6 +2,7 @@ import os
 import pathlib
 from datetime import datetime
 import hashlib
+import logging
 
 import sqlite3
 
@@ -9,9 +10,14 @@ from PIL import Image as PILImage
 from PIL import ExifTags
 from PIL import TiffImagePlugin
 
-import logging
 import boto3
 from botocore.exceptions import ClientError
+
+import requests
+
+def post_to_server(server_conf, payload):
+    p = requests.post('{}{}'.format(server_conf['host'], server_conf['image_api']), json=payload)
+    return p.text
 
 def upload_to_s3(aws_conf, file_name, object_name):
 
@@ -37,8 +43,9 @@ CREATE TABLE IF NOT EXISTS source (
   name TEXT,
   count INTEGER,
   created INTEGER,
-  status TEXT);
-'''
+  status TEXT,
+  description TEXT
+);'''
 
 SQL_INIT_IMAGE = '''
 CREATE TABLE IF NOT EXISTS image (
@@ -53,15 +60,18 @@ CREATE TABLE IF NOT EXISTS image (
   changed INTEGER,
   exif TEXT,
   source_id INTEGER,
+  server_image_id TEXT,
   FOREIGN KEY (source_id) REFERENCES source(source_id)
 );'''
 
-SQL_INIT_TASK = '''
-CREATE TABLE IF NOT EXISTS image (
-  task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+SQL_INIT_CATEGORY = '''
+CREATE TABLE IF NOT EXISTS category (
+  category_id INTEGER PRIMARY KEY,
+  name TEXT,
+  category_type TEXT,
   created INTEGER,
-  source_id INTEGER,
-  FOREIGN KEY (source_id) REFERENCES source(source_id)
+  updated INTEGER,
+  parent_id INTEGER
 );'''
 
 class Database(object):
@@ -79,6 +89,7 @@ class Database(object):
         self.db_file = db_file
         cursor.execute(SQL_INIT_SOURCE)
         cursor.execute(SQL_INIT_IMAGE)
+        #cursor.execute(SQL_INIT_CATEGORY)
         self.cursor = cursor
 
     def exec_sql(self, sql, commit=False):

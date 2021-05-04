@@ -1,3 +1,5 @@
+import { ipcRenderer } from 'electron'
+
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -23,8 +25,13 @@ import { ConfigContext } from '../app';
 import DataTable from './DataTable';
 //import UploadStepper from './components/Folder/UploadStepper';
 import DisplaySetting from './DisplaySetting';
+import MenuSelector from './MenuSelector';
 
-import { saveAnnotation, updateImage } from '../utils'
+import {
+  saveAnnotation,
+  updateImage,
+  updateSourceDescription,
+} from '../utils';
 
 const useStyles = makeStyles({
   root: {
@@ -43,16 +50,28 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
   const [openImageScreen, setOpenImageScreen] = React.useState(false);
   const [currentRowIndex, setCurrentRowIndex] = React.useState(0)
   const [openDisplaySetting, setOpenDisplaySetting] = React.useState(false);
-
-
+  const initDesc = sourceData.source[7] ? JSON.parse(sourceData.source[7]) : null;
+  const [menuSelect, setMenuSelect] = React.useState({
+    project:{
+      selected: initDesc ? initDesc.project_id : undefined,
+      options:[]
+    },
+    studyarea:{
+      selected: initDesc ? initDesc.studyarea_id : undefined,
+      options:[]
+    },
+    deployment:{
+      selected: initDesc ? initDesc.deployment_id : undefined,
+      options:[]
+    }
+  });
+  //console.log(initDesc);
   const config = React.useContext(ConfigContext);
 
   const confColumnLabels = config.Column.labels.split('|');
   const initColumnState = {};
   for (let i=0;i<confColumnLabels.length;i++) {
     const v = confColumnLabels[i].split(':');
-    //if v[0] in ['']
-    //console.log(v[0],'----');
     initColumnState[v[0]] = {
       key: v[0],
       label: v[1],
@@ -60,15 +79,75 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       sort: i,
     }
   }
-  //const initColumnState = confColumnLabels.map((x) => {
-  //  const v = x.split(':')
-  //  v.push(true);
-  //  return (v)
-  //});
+
   const [columnState, setColumnState] = React.useState(initColumnState);
 
   React.useEffect(() => {
+    const url = `${config.Server.host}${config.Server.project_api}`;
+    ipcRenderer.invoke('request', url)
+               .then((data) => {
+                 //console.log(data.results);
+                 setMenuSelect((ps) => ({
+                   ...ps,
+                   project:{
+                     selected: ps.project.selected,
+                     options: data.results
+                   }
+                 }));
+                 return true
+               }).catch((resp) => console.warn(resp));
   }, []);
+
+  React.useEffect(() => {
+    if (menuSelect.project.selected === undefined) {
+      return null;
+    }
+    const url = `${config.Server.host}${config.Server.project_api}${menuSelect.project.selected}`;
+    ipcRenderer
+      .invoke('request', url)
+      .then((data) => {
+        console.log('proj', menuSelect, data);
+        setMenuSelect((ps) => {
+          const deploymentOptions = (ps.deployment.selected) ? data.studyareas.find((x)=>x.studyarea_id===ps.studyarea.selected).deployments.map((x)=> ({deployment_id: x.deployment_id, name: x.name})) : [];
+          return {
+            ...ps,
+            studyarea:{
+              selected: ps.studyarea.selected,
+              options: data.studyareas.map((x)=>({
+                studyarea_id:x.studyarea_id,
+                name: x.name,
+              })),
+            },
+            deployment:{
+              selected: ps.deployment.selected,
+              options: deploymentOptions,
+            },
+            tmp: data.studyareas,
+          }
+        });
+        return true
+        }).catch((resp) => console.warn(resp));
+  }, [menuSelect.project.selected]);
+
+  React.useEffect(() => {
+    if (menuSelect.studyarea.selected === undefined && menuSelect.studyarea.options.length > 0) {
+      return null;
+    }
+    setMenuSelect((ps) => {
+      const deploymentOptions = (ps.tmp && ps.tmp.length > 0) ? ps.tmp.find((x)=>x.studyarea_id===menuSelect.studyarea.selected).deployments.map((x)=> ({deployment_id: x.deployment_id, name: x.name})) : [];
+      return {
+        ...ps,
+        studyarea:{
+          selected: menuSelect.studyarea.selected,
+          options: ps.studyarea.options,
+        },
+        deployment:{
+          selected: ps.deployment.selected,
+          options: deploymentOptions,
+        },
+      }
+    });
+  }, [menuSelect.studyarea.selected]);
 
   const handleColumnDisplayClick = (e, key) => {
     //console.log(e.target, key);
@@ -141,6 +220,50 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     */
   }
 
+  const handleMenuChange = (e, category) => {
+    if (category === 'project') {
+      setMenuSelect((ps)=> ({
+        ...ps,
+        project: {
+          selected:e.target.value,
+          options: ps.project.options
+        },
+      }));
+    } else if (category === 'studyarea') {
+      setMenuSelect((ps)=> ({
+        ...ps,
+        studyarea: {
+          selected:e.target.value,
+          options: ps.studyarea.options,
+        }
+      }));
+    } else if (category === 'deployment') {
+      const selected_id = e.target.value;
+      setMenuSelect((ps)=> ({
+        ...ps,
+        deployment: {
+          selected: selected_id,
+          options: ps.deployment.options,
+        }
+      }));
+
+      const t = {
+        project_id: menuSelect.project.selected,
+        project_name: menuSelect.project.options.find((x)=>x.project_id===menuSelect.project.selected).name,
+        studyarea_id: menuSelect.studyarea.selected,
+        studyarea_name: menuSelect.studyarea.options.find((x)=>x.studyarea_id===menuSelect.studyarea.selected).name,
+        deployment_id: selected_id,
+        deployment_name: menuSelect.deployment.options.find((x)=>x.deployment_id===selected_id).name,
+      };
+      let put = JSON.stringify(t);
+      put = put.replace(/"/g, '\\"');
+      console.log(put);
+      updateSourceDescription(config.SQLite.dbfile, sourceData.source[0], put).then((res)=>{
+        console.log(res);
+      });
+    }
+  }
+
   const ImagePreview = () => {
     const srcAtom = getImage(currentRowIndex);
     return (
@@ -167,15 +290,14 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
   )
 
 
-
-  //console.log(sourceData);
+  console.log('<ImageListContainer>', sourceData, menuSelect);
   return (
       <div className={classes.root}>
       <Grid container spacing={1}>
       <Grid item sm={12}>
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
       <Link color="inherit" href="#" onClick={(e)=>onChangeView(e, 'source-list')}>目錄</Link>
-          <Typography color="textPrimary">{sourceData.source[3]}</Typography>
+      <Typography color="textPrimary">{sourceData.source[3]}</Typography>
       </Breadcrumbs>
       </Grid>
       </Grid>
@@ -183,8 +305,9 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
 
       <Button onClick={()=> setOpenDisplaySetting(true)}>
       setting
-    </Button>
+      </Button>
 
+      {menuSelect ? <MenuSelector data={menuSelect} onChange={handleMenuChange} /> : null}
       <Grid container spacing={1}>
       <Grid item sm={8}>
       <DataTable count={sourceData.image_list.length} onSave={handleSaveButton} onRow={handleRowClick} rowsInPage={sourceData.image_list} columnState={columnState} />

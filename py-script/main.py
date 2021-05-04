@@ -35,6 +35,7 @@ ACTION_CHOICES = [
     'batch-upload',
     'prepare-upload',
     'upload-image',
+    'update-source-description',
 ]
 
 #sys.stdout.reconfigure(encoding='utf-8')
@@ -46,11 +47,19 @@ def main(args):
         'data': None,
         #'foo': '中文',
     }
-
     if args.action == 'upload-image' and args.db_file and args.resource_id:
         src = Source('database', name=args.db_file)
         res = src.upload_image(args.resource_id)
         result['data'] = res
+    elif args.action == 'update-source-description' and args.db_file and args.resource_id and args.value:
+        src = Source('database', name=args.db_file)
+        res = src.update_description(args.resource_id, args.value)
+        result['result'] = {
+            'source_id': args.resource_id,
+            'value': args.value,
+            'text': 'update ok',
+            'sql': res
+        }
     elif args.action == 'prepare-upload' and args.db_file and args.resource_id:
         src = Source('database', name=args.db_file)
         res = src.prepare_upload(args.resource_id)
@@ -58,8 +67,10 @@ def main(args):
     elif args.action == 'batch-upload' and args.resource_id and args.ini_file and args.db_file:
         src = Source('database', name=args.db_file)
         config = Config(args.ini_file)
-        aws_conf = config.get_config()['AWSConfig']
-        res = src.batch_upload(aws_conf, args.resource_id)
+        conf = config.get_config()
+        server_image_info = src.upload_annotation(conf, args.resource_id)
+        #print (server_image_info)
+        res = src.batch_upload(conf, args.resource_id, server_image_info)
         result['data'] = res
     elif args.action == 'get-config' or \
        (args.ini_file and not args.set_config_value):

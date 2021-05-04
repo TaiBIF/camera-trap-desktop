@@ -39,6 +39,9 @@ const prepareUploadSource = async(db_file, source_id) => {
 const uploadImage = async(db_file, image_id) => {
   return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a upload-image -k ${image_id} -o json`, true);
 }
+const updateSourceDescription = async(db_file, source_id, data) => {
+  return await runCommand(`main.exe -d ${db_file} -a update-source-description -k ${source_id} -v ${data} -o json`, true);
+}
 /*
 const getImageList = async(db_file, source_id) => {
   return await runCommand(`main.exe -d ${db_file} -r image -a get -k ${source_id} -o json`, true);
@@ -55,4 +58,5 @@ export {
   uploadSourceCallback,
   prepareUploadSource,
   uploadImage,
+  updateSourceDescription,
 }
