@@ -69,15 +69,25 @@ class Source(object):
         return res
 
     def upload_annotation(self, config, source_id):
-        res = self.get_source(source_id, 'un-upload')
+        #res = self.get_source(source_id, 'un-upload')
+        res = self.get_source(source_id, 'all')
         now = int(time.time())
-        payload = [[x[0], x[7]] for x in res['image_list']]
 
-        res_server = post_to_server(config['Server'], payload)
-        return res_server
+        annotation_list = []
+        for x in res['image_list']:
+            image_id = x[0]
+            annotation = x[7] if x[7] else '{}'
+            annotation_list.append([image_id, annotation])
 
-    def batch_upload(self, config, source_id, server_image_info):
-        res = self.get_source(source_id, 'un-upload')
+        payload = {
+            'annotation_list': annotation_list,
+            'deployment_id': res['source'][0],
+        }
+        return post_to_server(config['Server'], payload)
+
+    def batch_upload(self, config, source_id, image_context):
+        #res = self.get_source(source_id, 'un-upload')
+        res = self.get_source(source_id, 'all')
         for i in res['image_list']:
             file_name = i[1]
             sql = 'UPDATE image SET status="S" WHERE image_id={}'.format(i[0])
@@ -101,7 +111,7 @@ class Source(object):
         self.db.exec_sql(sql, True)
 
         #for i in server_image_info:
-        
+
         res['foo'] = 'total upload!'
 
         # post to server

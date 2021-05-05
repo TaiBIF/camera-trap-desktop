@@ -72,7 +72,7 @@ export default function SourceListContainer({onChangeView}) {
     if(counter && uploadQueue.length > 0) {
       const sources = uploadQueue.map((x)=>x.sourceID).join(',');
       prepareUploadSource(config.SQLite.dbfile, sources).then((res)=>{
-        console.log('poll res:', res['data']);
+        console.log('poll status:', res['data']);
         setUploadQueue((ps)=>{
           for (let i in res['data']) {
             const idx = ps.findIndex((x)=> parseInt(x.sourceID, 10) === parseInt(i, 10));

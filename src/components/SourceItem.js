@@ -85,7 +85,7 @@ const checkUploadState = (row, uploading, isClicked) => {
 
   export default function SourceItem({data, onDelete, onUpload, progress}) {
     const classes = useStyles();
-    const v = data;
+
     //const uploadProgress = (data[6] === 'I' ) ? 0 : 100;
     //const uploadProgressTitle = `(${uploadQueue}/${data[4]})`;
     const [isUploading, setIsUploading] = React.useState(false);
@@ -101,7 +101,7 @@ const checkUploadState = (row, uploading, isClicked) => {
     if (isUploading && progress === null) {
       setIsUploading(false);
     }
-    const uploadState = checkUploadState(v, isUploading, isClickUpload);
+    const uploadState = checkUploadState(data, isUploading, isClickUpload);
     const desc = JSON.parse(data[7]);
     const ChipList = ()=> {
       if (data[7]) {
@@ -121,12 +121,12 @@ const checkUploadState = (row, uploading, isClicked) => {
       <Grid item sm={12}>
       <ChipList />
       <Typography gutterBottom variant="h6" color="textPrimary">
-      {v[3]} ({v[4]})
+      {data[3]} ({data[4]})
       </Typography>
       <Typography variant="body2" gutterBottom>
       </Typography>
       <Typography variant="body2" color="textSecondary">
-      {v[2]}
+      {data[2]}
       </Typography>
       </Grid>
       </Grid>
@@ -137,7 +137,7 @@ const checkUploadState = (row, uploading, isClicked) => {
       component="label"
       size="small"
       className={classes.cardFooter}
-      onClick={(e) => onDelete(e, v[0])}
+      onClick={(e) => onDelete(e, data[0])}
       >刪除
       </Button>
       </Grid>
@@ -148,7 +148,8 @@ const checkUploadState = (row, uploading, isClicked) => {
       size="small"
       color={uploadState.color}
       className={classes.cardFooter}
-      onClick={(e) => clickUploadButton(e, v)}
+      onClick={(e) => clickUploadButton(e, data)}
+      disabled={data[7]===null? true:null}
       >{uploadState.title}
       </Button>
       </Grid>

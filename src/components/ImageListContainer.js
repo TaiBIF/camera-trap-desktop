@@ -75,7 +75,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     initColumnState[v[0]] = {
       key: v[0],
       label: v[1],
-      checked: true,
+      checked: ['filename', 'datetime', 'species', 'lifestage'].indexOf(v[0]) >= 0 ? true : false,
       sort: i,
     }
   }
@@ -303,8 +303,8 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       </Grid>
       <hr />
 
-      <Button onClick={()=> setOpenDisplaySetting(true)}>
-      setting
+      <Button onClick={()=> setOpenDisplaySetting(true)} variant="outlined">
+      設定顯示欄位
       </Button>
 
       {menuSelect ? <MenuSelector data={menuSelect} onChange={handleMenuChange} /> : null}

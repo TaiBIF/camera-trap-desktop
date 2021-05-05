@@ -12,7 +12,6 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 
 const DisplaySetting = ({openDisplaySetting, setOpenDisplaySetting, columnState, onColumnDisplayClick}) => {
-
   const columnList = [];
   for (let i in columnState) {
     columnList.push(columnState[i]);
@@ -28,7 +27,7 @@ const DisplaySetting = ({openDisplaySetting, setOpenDisplaySetting, columnState,
       maxWidth="lg"
       scroll="body"
         >
-      <DialogTitle id="alert-dialog-title">Setting</DialogTitle>
+      <DialogTitle id="alert-dialog-title">顯示欄位</DialogTitle>
       <DialogContent>
       <DialogContentText id="alert-dialog-description">
       labels

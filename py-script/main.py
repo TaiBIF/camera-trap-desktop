@@ -70,7 +70,9 @@ def main(args):
         conf = config.get_config()
         server_image_info = src.upload_annotation(conf, args.resource_id)
         #print (server_image_info)
-        res = src.batch_upload(conf, args.resource_id, server_image_info)
+        #if server_info['status_code']:
+        #print (server_image_info)
+        res = src.batch_upload(conf, args.resource_id, server_image_info['text'])
         result['data'] = res
     elif args.action == 'get-config' or \
        (args.ini_file and not args.set_config_value):

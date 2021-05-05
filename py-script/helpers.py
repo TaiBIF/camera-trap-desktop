@@ -16,8 +16,13 @@ from botocore.exceptions import ClientError
 import requests
 
 def post_to_server(server_conf, payload):
+    print (payload)
     p = requests.post('{}{}'.format(server_conf['host'], server_conf['image_api']), json=payload)
-    return p.text
+
+    return {
+        'status_code': p.status_code,
+        'text': p.text,
+    }
 
 def upload_to_s3(aws_conf, file_name, object_name):
 
