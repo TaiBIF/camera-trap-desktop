@@ -103,16 +103,23 @@ const checkUploadState = (row, uploading, isClicked) => {
     }
     const uploadState = checkUploadState(v, isUploading, isClickUpload);
     const desc = JSON.parse(data[7]);
-    const chipList = <div className={classes.chipList}>
-    <Tooltip title={desc.project_name}><Chip label="計劃" color="primary" key={desc.project_name} /></Tooltip>
-    <Chip label={`${desc.studyarea_name} / ${desc.deployment_name}`} icon=<LocationOnIcon /> color="primary" variant="outlined" key={desc.deployment_name} />
-    </div>;
+    const ChipList = ()=> {
+      if (data[7]) {
+        return (
+          <div className={classes.chipList}>
+          <Tooltip title={desc.project_name}><Chip label="計劃" color="primary" key={desc.project_name} /></Tooltip>
+          <Chip label={`${desc.studyarea_name} / ${desc.deployment_name}`} icon=<LocationOnIcon /> color="primary" variant="outlined" key={desc.deployment_name} />
+          </div>
+        );
+      }
+      return null;
+    }
 
     return (
       <Paper className={classes.cardItem}>
       <Grid container>
       <Grid item sm={12}>
-      { v[7] ? chipList : null}
+      <ChipList />
       <Typography gutterBottom variant="h6" color="textPrimary">
       {v[3]} ({v[4]})
       </Typography>
