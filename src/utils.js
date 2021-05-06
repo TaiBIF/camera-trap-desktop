@@ -30,11 +30,11 @@ const uploadSource = async(db_file, source_id) => {
 }
 
 // for child.pid
-const uploadSourceCallback = (db_file, source_id) => {
-  return runCommandCallback(`main.exe -d ${db_file} -i ${INI_FILE} -a batch-upload -k ${source_id} -o json`, true);
+const uploadSourceCallback = (db_file, source_id, cb_func) => {
+  return runCommandCallback(`main.exe -d ${db_file} -i ${INI_FILE} -a batch-upload -k ${source_id} -o json`, true, ()=>cb_func(source_id));
 }
-const prepareUploadSource = async(db_file, source_id) => {
-  return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a prepare-upload -k ${source_id} -o json`, true);
+const pollSourceStatus = async(db_file, source_id) => {
+  return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a poll-source-status -k ${source_id} -o json`, true);
 }
 const uploadImage = async(db_file, image_id) => {
   return await runCommand(`main.exe -d ${db_file} -i ${INI_FILE} -a upload-image -k ${image_id} -o json`, true);
@@ -56,7 +56,7 @@ export {
   updateImage,
   uploadSource,
   uploadSourceCallback,
-  prepareUploadSource,
+  pollSourceStatus,
   uploadImage,
   updateSourceDescription,
 }

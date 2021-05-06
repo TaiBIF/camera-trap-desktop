@@ -42,10 +42,12 @@ const CellRender = ({value}) => {
 
 //🐤🐥🍗📂
 const STATUS_MAP = {
-  'I': '📁',
-  'O': '👀',
-  'A': '✔️',
-  'U': '🐔',
+  '10': '📁',
+  '20': '👀',
+  '30': '📝',
+  '100': '🔥',
+  '110': '-',
+  '200': '✔️',
 }
 const getStatus = (x) => {
   for (let i in STATUS_MAP) {
@@ -111,9 +113,9 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
         for (let i=0; i<changes.length;i++) {
           const [row, prop, oldVal, newVal] = changes[i];
           ps[row][prop] = newVal;
-          if (ps[row]['status'] === 'O') {
-            ps[row]['status'] = 'A';
-            ps[row]['status_display'] = STATUS_MAP['A'];
+          if (ps[row]['status'] === '20') {
+            ps[row]['status'] = '30';
+            ps[row]['status_display'] = STATUS_MAP['30'];
           }
         }
         return ps
@@ -126,9 +128,9 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     }
 
     setData((ps)=> {
-      if (ps[rowIndex]['status'] === 'I') {
-        ps[rowIndex]['status'] = 'O';
-        ps[rowIndex]['status_display'] = STATUS_MAP['O'];
+      if (ps[rowIndex]['status'] === '10') {
+        ps[rowIndex]['status'] = '20';
+        ps[rowIndex]['status_display'] = STATUS_MAP['20'];
       }
       return ps
     })
@@ -167,10 +169,10 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
   };
 
   return (
-      <>
-      <HotTable id="ct-hot" settings={settings} />
-      <Button variant="contained" color="primary" onClick={(e)=> onSave(e, data)} className={classes.button}>save</Button>
-      </>
+    <>
+    <HotTable id="ct-hot" settings={settings} />
+    <Button variant="contained" color="primary" onClick={(e)=> onSave(e, data)} className={classes.button}>save</Button>
+    </>
   )
 }
 //<Button variant="contained" color="secondary" onClick={handleUpload} className={classes.button}>Upload</Button>

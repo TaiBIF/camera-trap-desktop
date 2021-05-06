@@ -16,13 +16,13 @@ import {
   deleteSource,
   uploadSource,
   uploadSourceCallback,
-  prepareUploadSource,
+  pollSourceStatus,
   uploadImage,
 } from '../utils'
 import SourceItem from './SourceItem';
 
 
-const POLLING_INTERVAL = 2000;
+const POLLING_INTERVAL = 2500;
 
 const useStyles = makeStyles((theme) => ({
   progress: {
@@ -71,7 +71,7 @@ export default function SourceListContainer({onChangeView}) {
   React.useEffect( () => {
     if(counter && uploadQueue.length > 0) {
       const sources = uploadQueue.map((x)=>x.sourceID).join(',');
-      prepareUploadSource(config.SQLite.dbfile, sources).then((res)=>{
+      pollSourceStatus(config.SQLite.dbfile, sources).then((res)=>{
         console.log('poll status:', res['data']);
         setUploadQueue((ps)=>{
           for (let i in res['data']) {
@@ -111,7 +111,14 @@ export default function SourceListContainer({onChangeView}) {
 
     // start polling
     setCounter(counter+1);
-    const child = uploadSourceCallback(config.SQLite.dbfile, sourceID);
+
+    const errCallback = (source_id) => {
+      handleCancelButton(null);
+      const src = sourceList.find((x)=> parseInt(x[0], 10) === parseInt(source_id, 10));
+      const sourceName = src[3] || '';
+      providerRef.current.enqueueSnackbar(`${sourceName} | 上傳失敗`, { variant:'error'});
+    }
+    const child = uploadSourceCallback(config.SQLite.dbfile, sourceID, ()=>errCallback(sourceID));
 
     setUploadQueue((ps)=>[...ps, {
       sourceID: sourceID,
@@ -151,9 +158,6 @@ export default function SourceListContainer({onChangeView}) {
     }
   }
 
-  //console.log(sourceList);
-  console.log('render |', uploadQueue);
-
   const getUploadProgress = (source) => {
     if (uploadQueue.length > 0) {
       const qIndex = uploadQueue.findIndex((x)=> parseInt(x.sourceID, 10) === parseInt(source[0], 10));
@@ -188,6 +192,8 @@ export default function SourceListContainer({onChangeView}) {
     return null
   }
 
+  console.log('<SourceListContainer>', 'sourceList', sourceList)
+  console.log('|-', 'uploadQueue | counter', uploadQueue, counter);
   return (
     <div className={classes.root}>
     <Grid container spacing={3} direction="row" justify="space-between" alignItems="flex-end">

@@ -34,7 +34,7 @@ async function runCommand(command, isJson){
   }
 }
 
-const runCommandCallback = (command, isJson) => {
+const runCommandCallback = (command, isJson, errCallback) => {
   const command_ = command.replace('main.exe', pyVenvMain);
 
   const child = child_process.exec(
@@ -52,6 +52,11 @@ const runCommandCallback = (command, isJson) => {
 
       if (stdout) {
         if (isJson) {
+          const out = JSON.parse(stdout)
+          //console.log(out);
+          if (!out.is_success) {
+            errCallback();
+          }
           return JSON.parse(stdout);
         } else {
           return stdout;

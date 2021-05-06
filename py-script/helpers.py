@@ -15,9 +15,8 @@ from botocore.exceptions import ClientError
 
 import requests
 
-def post_to_server(server_conf, payload):
-    print (payload)
-    p = requests.post('{}{}'.format(server_conf['host'], server_conf['image_api']), json=payload)
+def post_to_server(url ,payload):
+    p = requests.post(url, json=payload)
 
     return {
         'status_code': p.status_code,

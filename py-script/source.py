@@ -52,6 +52,7 @@ class Source(object):
         self.db.exec_sql(sql, True)
 
     def upload_image(self, image_id):
+        ## test
         sql = 'UPDATE image SET status="S" WHERE image_id={}'.format(image_id)
         #upload_to_s3(aws_conf, file_name, object_name)
         self.db.exec_sql(sql, True)
@@ -59,7 +60,7 @@ class Source(object):
         ## TODO: update state
         return 'image_id: {} uploaded'.format(image_id)
 
-    def prepare_upload(self, source_id_str):
+    def poll_source_status(self, source_id_str):
         source_list = source_id_str.split(',')
         res = {}
         for i in source_list:
@@ -68,58 +69,79 @@ class Source(object):
         ## TODO: update state
         return res
 
-    def upload_annotation(self, config, source_id):
+    def batch_upload(self, config, source_id):
+        '''
+        1) upload annotation(one time)
+        2) upload image file
+          2-1) upload to s3
+          2-2) update file_url to server
+        '''
         #res = self.get_source(source_id, 'un-upload')
         res = self.get_source(source_id, 'all')
-        now = int(time.time())
 
-        annotation_list = []
-        for x in res['image_list']:
-            image_id = x[0]
-            annotation = x[7] if x[7] else '{}'
-            annotation_list.append([image_id, annotation])
+        # 1) upload annotation
+        rows = []
+        #for i in res['image_list']:
+            #a = i[7] if i[7] else '{}'
+        #    rows.append(i)
+        res['upload_progress'] = '0'
+
+        deployment_id = '--'
+        if des := res['source'][7]:
+            deployment_id = json.loads(des).get('deployment_id', '')
 
         payload = {
-            'annotation_list': annotation_list,
-            'deployment_id': res['source'][0],
+            'image_list': res['image_list'],
+            'key': '{}-{}'.format(
+                config['Installation']['account_id'],
+                res['source'][0]),
+            'deployment_id': deployment_id,
         }
-        return post_to_server(config['Server'], payload)
 
-    def batch_upload(self, config, source_id, image_context):
-        #res = self.get_source(source_id, 'un-upload')
-        res = self.get_source(source_id, 'all')
-        for i in res['image_list']:
-            file_name = i[1]
-            sql = 'UPDATE image SET status="S" WHERE image_id={}'.format(i[0])
-            self.db.exec_sql(sql, True)
-            #time.sleep(3)
-            img = ClamImage(file_name)
-            img_hash = img.make_hash()
-            object_name = '{}/{}/{}/{}-{}-{}.jpg'.format(
-                'foo-proj',
-                'foo-studyarea',
-                'foo-cameralocation',
-                img_hash,
-                source_id,
-                i[0],
-            )
-            upload_to_s3(config['AWSConfig'], file_name, object_name)
-            sql = 'UPDATE image SET status="U" WHERE image_id={}'.format(i[0])
-            self.db.exec_sql(sql, True)
-
-        sql = 'UPDATE source SET status="U" WHERE source_id={}'.format(source_id)
+        # update image status to "start upload"
+        sql = "UPDATE image SET status='100' WHERE image_id IN ({})".format(','.join([str(x[0]) for x in res['image_list']]))
         self.db.exec_sql(sql, True)
 
-        #for i in server_image_info:
+        resp = post_to_server(
+            '{}{}'.format(
+                config['Server']['host'],
+                config['Server']['image_annotation_api']),
+            payload)
 
-        res['foo'] = 'total upload!'
+        if resp['status_code'] != 200:
+            return ''
+        else:
+            res['upload_progress'] = '1'
+            server_image_map = json.loads(resp['text'])['saved_image_ids']
+            # 2) upload file
+            count = 0
+            count_uploaded = 0
+            for i in res['image_list']:
+                count += 1
+                file_name = i[1]
+                img = ClamImage(file_name)
+                server_image_id = server_image_map.get(str(i[0]), '')
+                #object_name = '{}-{}.jpg'.format(server_image_id, i[6])
+                object_name = '{}.jpg'.format(server_image_id)
+                is_uploaded = upload_to_s3(config['AWSConfig'], file_name, object_name)
+                if is_uploaded:
+                    count_uploaded = 0
+                    sql = 'UPDATE image SET status="200", server_image_id={} WHERE image_id={}'.format(server_image_id, i[0])
+                    self.db.exec_sql(sql, True)
 
-        # post to server
-        source = self.get_source(source_id, 'all')
-        payload = {
-            'source_id': source_id, # TODO
-            'image_list': [],
-        }
+                    payload = {
+                        'file_url': object_name,
+                        'pk': server_image_id,
+                    }
+                    resp = post_to_server(
+                        '{}{}'.format(
+                            config['Server']['host'],
+                            config['Server']['image_update_api']),
+                        payload)
+
+            sql = 'UPDATE source SET status="200" WHERE source_id={}'.format(source_id)
+            self.db.exec_sql(sql, True)
+            res['upload_progress'] = '2({}/{})'.format(count, count_uploaded)
 
         return res
 
@@ -140,10 +162,10 @@ class Source(object):
             images = []
             if mode == 'all':
                 images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={}'.format(source_id))
-            elif mode == 'un-upload':
-                images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={} AND status != "U"'.format(source_id))
+            #elif mode == 'un-upload':
+            #    images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={} AND status != "U"'.format(source_id))
             elif mode == 'uploaded':
-                images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={} AND status = "U"'.format(source_id))
+                images = self.db.fetch_sql_all('SELECT * FROM image WHERE source_id={} AND status = "200"'.format(source_id))
 
             return {
                 'source': res,
@@ -197,11 +219,12 @@ class Source(object):
         ts_now = int(time.time())
         dir_name = os.path.split(path)[-1]
 
-        sql = "INSERT INTO source (source_type, path, name, count, created, status) VALUES('folder', '{}', '{}', {}, {}, 'I')".format(path, dir_name, len(image_list), ts_now)
+        sql = "INSERT INTO source (source_type, path, name, count, created, status) VALUES('folder', '{}', '{}', {}, {}, '10')".format(path, dir_name, len(image_list), ts_now)
         rid = self.db.exec_sql(sql, True)
 
         timestamp = None
         for i in image_list:
+            img_hash = i['img'].make_hash()
             exif  = i['img'].exif
             dtime = exif.get('DateTimeOriginal', '')
             via = 'exif'
@@ -213,11 +236,13 @@ class Source(object):
                 timestamp = int(stat.st_mtime)
                 via = 'mtime'
 
-            sql = "INSERT INTO image (path, name, timestamp, timestamp_via, status, annotation, changed, exif, source_id) VALUES ('{}','{}', {}, '{}', 'I','{}', {}, '{}', {})".format(
+            sql = "INSERT INTO image (path, name, timestamp, timestamp_via, status, hash, annotation, changed, exif, source_id) VALUES ('{}','{}', {}, '{}', '{}', '{}','{}', {}, '{}', {})".format(
                 i['path'],
                 i['name'],
                 timestamp,
                 via,
+                '10',
+                img_hash,
                 '',
                 ts_now,
                 json.dumps(exif),
