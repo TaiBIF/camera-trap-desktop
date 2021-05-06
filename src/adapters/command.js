@@ -42,6 +42,7 @@ const runCommandCallback = (command, isJson, errCallback) => {
     ((error, stdout, stderr) => {
       if (error) {
         console.error(`error: ${error.message}`);
+        errCallback();
         return;
       }
 
