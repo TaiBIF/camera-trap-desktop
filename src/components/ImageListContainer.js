@@ -257,7 +257,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       };
       let put = JSON.stringify(t);
       put = put.replace(/"/g, '\\"');
-      console.log(put);
+      console.log('put description', put);
       updateSourceDescription(config.SQLite.dbfile, sourceData.source[0], put).then((res)=>{
         console.log(res);
       });

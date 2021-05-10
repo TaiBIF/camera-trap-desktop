@@ -10,11 +10,11 @@
     "dev:react": "cross-env NODE_ENV=development webpack serve --config webpack.react.config.js --mode development",
     "build:electron": "cross-env NODE_ENV=production webpack --config webpack.electron.config.js --mode production",
     "build:react": "cross-env NODE_ENV=production webpack --config webpack.react.config.js --mode production",
-    "build": "npm run build:electron && npm run build:react",
+    "build": "npm run build:electron; npm run build:react",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "packager": "electron-packager . camera-trap-desktop --platform=win32 --arch=x64 --out=../out --overwrite --asar",
-    "package-py-win": ".\\py-script\\venv\\Scripts\\activate.ps1; pyinstaller.exe --onefile -F .\\py-script\\main.py --distpath .\\ --clean"
+    "packager": "electron-packager . camera-trap-desktop --platform=win32 --arch=x64 --out=../out --overwrite --asar; cp .\\py-dist\\main.exe ..\\out\\camera-trap-desktop-win32-x64",
+    "package-py-win": ".\\py-script\\venv\\Scripts\\activate.ps1; pyinstaller.exe --onefile -F .\\py-script\\main.py --distpath .\\py-dist --clean"
   },
   "author": "",
   "license": "ISC",

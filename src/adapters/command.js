@@ -1,12 +1,21 @@
 const util = require('util');
 const child_process = require('child_process');
 const exec = util.promisify(child_process.exec);
+const path = require("path");
+const fs = require("fs");
 
 const pyVenvMain = '.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py';
 
 async function runCommand(command, isJson){
   //console.log(__dirname, command);
-  const command_ = command.replace('main.exe', pyVenvMain);
+  //const hasExe = fs.existsSync(path.join(__dirname, 'py-script'));
+  const hasMainExe = fs.existsSync(path.join(__dirname, 'main.exe'));
+  //const hasExe = false;
+  //const command_ = (hasMainExe) ? command : command.replace('main.exe', pyVenvMain);
+
+  //const command_ = (process.env.NODE_ENV === 'development') ? command.replace('main.exe', pyVenvMain) : command;
+  const command_ = command;
+  console.log(process.env.NODE_ENV, command_, hasMainExe);
 
   const {error, stdout, stderr} = await exec(command_);
 
@@ -35,7 +44,8 @@ async function runCommand(command, isJson){
 }
 
 const runCommandCallback = (command, isJson, errCallback) => {
-  const command_ = command.replace('main.exe', pyVenvMain);
+  //const command_ = command.replace('main.exe', pyVenvMain);
+  const command_ = command;
 
   const child = child_process.exec(
     command_,
