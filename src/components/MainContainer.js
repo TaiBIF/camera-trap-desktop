@@ -10,7 +10,7 @@ import { getSource } from '../utils'
 const useStyles = makeStyles({
   root: {
     padding: '16px 20px',
-  }
+  },
 });
 
 export default function MainContainer() {
@@ -19,6 +19,7 @@ export default function MainContainer() {
   const [view, setView] = React.useState('source-list');
   const [sourceID, setSourceID] = React.useState(0);
   const [sourceData, setSourceData] = React.useState(null);
+  const [backdropOpen, setBackdropOpen] = React.useState(false);
 
   const handleChangeView = (e, view, _id) => {
     //console.log('handle', view, _id);

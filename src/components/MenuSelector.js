@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme) => ({
 
 const MenuSelector = ({data, onChange}) => {
   const classes = useStyles();
-  //console.log('<MenuSelector>', data);
+  console.log('<MenuSelector>', data);
 
   return (
     <div>

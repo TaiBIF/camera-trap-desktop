@@ -4,20 +4,22 @@ const exec = util.promisify(child_process.exec);
 const path = require("path");
 const fs = require("fs");
 
-const pyVenvMain = '.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py';
+
+
+const useCommand = (cmd) => {
+  //const hasMainExe = fs.existsSync(path.join(__dirname, '..\\..\\..\\..\\..\\..\\main.exe'));
+  if (process.env.NODE_ENV === 'development') {
+    return cmd.replace('main.exe', '.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py');
+  } else {
+    return cmd;
+  }
+}
 
 async function runCommand(command, isJson){
-  //console.log(__dirname, command);
-  //const hasExe = fs.existsSync(path.join(__dirname, 'py-script'));
-  const hasMainExe = fs.existsSync(path.join(__dirname, 'main.exe'));
-  //const hasExe = false;
-  //const command_ = (hasMainExe) ? command : command.replace('main.exe', pyVenvMain);
 
-  //const command_ = (process.env.NODE_ENV === 'development') ? command.replace('main.exe', pyVenvMain) : command;
-  const command_ = command;
-  console.log(process.env.NODE_ENV, command_, hasMainExe);
-
-  const {error, stdout, stderr} = await exec(command_);
+  const cmd = useCommand(command)
+  //console.log('run',cmd);
+  const {error, stdout, stderr} = await exec(cmd);
 
   if (error) {
     console.error(`error: ${error.message}`);
@@ -45,10 +47,11 @@ async function runCommand(command, isJson){
 
 const runCommandCallback = (command, isJson, errCallback) => {
   //const command_ = command.replace('main.exe', pyVenvMain);
-  const command_ = command;
 
+  const cmd = useCommand(command)
+  console.log('command callback', cmd);
   const child = child_process.exec(
-    command_,
+    cmd,
     ((error, stdout, stderr) => {
       if (error) {
         console.error(`error: ${error.message}`);
@@ -64,7 +67,7 @@ const runCommandCallback = (command, isJson, errCallback) => {
       if (stdout) {
         if (isJson) {
           const out = JSON.parse(stdout)
-          //console.log(out);
+          console.log('python stdout (callback)', out);
           if (!out.is_success) {
             errCallback();
           }

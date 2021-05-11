@@ -17,7 +17,7 @@ import requests
 
 def post_to_server(url ,payload):
     p = requests.post(url, json=payload)
-
+    #print (p.text.encode('u8'))
     return {
         'status_code': p.status_code,
         'text': p.text,
@@ -32,7 +32,12 @@ def upload_to_s3(aws_conf, file_name, object_name):
     )
 
     try:
-        response = s3_client.upload_file(file_name, aws_conf['bucket_name'], object_name)
+        response = s3_client.upload_file(
+            file_name,
+            aws_conf['bucket_name'],
+            object_name,
+            ExtraArgs={'ACL': 'public-read'}
+        )
     except ClientError as e:
         logging.error(e)
         return False

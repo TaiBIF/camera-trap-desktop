@@ -109,7 +109,7 @@ class Source(object):
             payload)
 
         if resp['status_code'] != 200:
-            return ''
+            return resp['text']
         else:
             res['upload_progress'] = '1'
             server_image_map = json.loads(resp['text'])['saved_image_ids']

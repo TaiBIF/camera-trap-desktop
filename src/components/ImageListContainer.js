@@ -108,7 +108,14 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       .then((data) => {
         console.log('proj', menuSelect, data);
         setMenuSelect((ps) => {
-          const deploymentOptions = (ps.deployment.selected) ? data.studyareas.find((x)=>x.studyarea_id===ps.studyarea.selected).deployments.map((x)=> ({deployment_id: x.deployment_id, name: x.name})) : [];
+          let deploymentOptions = [];
+          if (ps.deployment.selected) {
+            const foundStudyArea = data.studyareas.find((x)=>x.studyarea_id===ps.studyarea.selected);
+            //console.log(foundStudyArea);
+            if (foundStudyArea && foundStudyArea.deployments.length > 0) {
+              deploymentOptions = foundStudyArea.deployments.map((x)=> ({deployment_id: x.deployment_id, name: x.name}));
+            }
+          }
           return {
             ...ps,
             studyarea:{
