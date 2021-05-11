@@ -75,7 +75,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     initColumnState[v[0]] = {
       key: v[0],
       label: v[1],
-      checked: ['filename', 'datetime', 'species', 'lifestage'].indexOf(v[0]) >= 0 ? true : false,
+      checked: config.Column.default_list.split(',').indexOf(v[0]) >= 0 ? true : false,
       sort: i,
     }
   }
@@ -188,17 +188,19 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
 
   const handleSaveButton = (e, data) => {
     console.table(data);
+    //console.log(initColumnState);
     //const header = ['image_id', 'species', 'lifestage'];
-    const trimData = data.map((x) => {
-      //return [x.image_id, x.lifestage, x.species]
-      return {
-        image_id: x.image_id,
-        lifestage: x.lifestage,
-        species: x.species,
-        status: x.status,
+    const trimData = data.map((row) => {
+      const r = {};
+      for (let x in row) {
+        // datetime & filename read-only here
+        if (['status_display', 'datetime', 'filename'].indexOf(x) < 0) {
+          r[x] = row[x];
+        }
       }
+      return r;
     });
-
+    //console.log(trimData);
     let put = JSON.stringify(trimData);
     //console.log(put);
     put = put.replace(/"/g, '\\"');

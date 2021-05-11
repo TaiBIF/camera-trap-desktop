@@ -65,11 +65,17 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     let lifestage = '';
     let sex = '';
     let species = '';
+    let animal_id = '';
+    let remarks = '';
+    let antler = '';
     if (v[7]) {
       const jdata = JSON.parse(v[7]);
       lifestage = jdata.lifestage;
       sex = jdata.sex;
       species = jdata.species;
+      animal_id = jdata.animal_id;
+      antler = jdata.antler;
+      remarks = jdata.remarks;
     }
     const d = new Date(v[3] * 1000);
     // cast datetime string
@@ -84,6 +90,9 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
       lifestage: lifestage,
       sex: sex,
       species: species,
+      animal_id: animal_id,
+      antler: antler,
+      remarks: remarks,
     };
   });
 
