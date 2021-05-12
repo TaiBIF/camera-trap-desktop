@@ -192,8 +192,10 @@ export default function SourceListContainer({onChangeView}) {
     return null
   }
 
-  console.log('<SourceListContainer>', 'sourceList', sourceList)
-  console.log('|-', 'uploadQueue | counter', uploadQueue, counter);
+  //console.log('<SourceListContainer>', 'sourceList', sourceList);
+  console._c('<SourceListContainer>', 'sourceList', sourceList);
+  //console.log('|-', 'uploadQueue | counter', uploadQueue, counter);
+  console._c('|-', 'uploadQueue | counter', uploadQueue, counter);
   return (
     <div className={classes.root}>
     <Grid container spacing={3} direction="row" justify="space-between" alignItems="flex-end">

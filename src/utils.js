@@ -1,4 +1,7 @@
 const util = require('util');
+const fs = require('fs');
+const path = require('path');
+
 import { runCommand, runCommandCallback } from './adapters/command';
 
 const INI_FILE = 'camera-trap-desktop.ini';
@@ -46,7 +49,25 @@ const updateSourceDescription = async(db_file, source_id, data) => {
 const getImageList = async(db_file, source_id) => {
   return await runCommand(`main.exe -d ${db_file} -r image -a get -k ${source_id} -o json`, true);
 }
-*/
+ */
+
+
+const catLogger = (...args) => {
+  console.log(...args);
+
+  const logPath = path.join(
+    __dirname,
+    (process.env.NODE_ENV === 'development') ?
+    '..\\..\\..\\..\\..\\..\\Debug.log' :
+    '..\\..\\..\\Debug.log');
+
+  const d = new Date();
+  const dateTime = `[${d.getYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}:${d.getMilliseconds()}]`;
+  const logFile = fs.createWriteStream(logPath, {flags : 'a'});
+  logFile.write(dateTime + ' ' + util.format(args) + '\n')
+  //process.stdout.write(util.format(s) + '\n');
+};
+
 export {
   loadConfig,
   addFolder,
@@ -59,4 +80,5 @@ export {
   pollSourceStatus,
   uploadImage,
   updateSourceDescription,
+  catLogger,
 }

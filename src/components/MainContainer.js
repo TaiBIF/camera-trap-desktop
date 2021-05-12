@@ -5,13 +5,16 @@ import { makeStyles } from '@material-ui/core/styles';
 import { ConfigContext } from '../app';
 import SourceListContainer from './SourceListContainer'
 import ImageListContainer from './ImageListContainer';
-import { getSource } from '../utils'
+import { getSource, catLogger } from '../utils'
 
 const useStyles = makeStyles({
   root: {
     padding: '16px 20px',
   },
 });
+
+//console.log = saveLogFile;
+console._c = catLogger;
 
 export default function MainContainer() {
   const classes = useStyles();
