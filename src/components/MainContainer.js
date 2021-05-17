@@ -5,7 +5,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import { ConfigContext } from '../app';
 import SourceListContainer from './SourceListContainer'
 import ImageListContainer from './ImageListContainer';
-import { getSource, catLogger } from '../utils'
+import {
+  getSource,
+  catLogger,
+} from '../utils'
 
 const useStyles = makeStyles({
   root: {

@@ -65,22 +65,10 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       options:[]
     }
   });
-  //console.log(initDesc);
+
   const config = React.useContext(ConfigContext);
 
-  const confColumnLabels = config.Column.labels.split('|');
-  const initColumnState = {};
-  for (let i=0;i<confColumnLabels.length;i++) {
-    const v = confColumnLabels[i].split(':');
-    initColumnState[v[0]] = {
-      key: v[0],
-      label: v[1],
-      checked: config.Column.default_list.split(',').indexOf(v[0]) >= 0 ? true : false,
-      sort: i,
-    }
-  }
-
-  const [columnState, setColumnState] = React.useState(initColumnState);
+  const [columnState, setColumnState] = React.useState(config.initColumn);
 
   React.useEffect(() => {
     const url = `${config.Server.host}${config.Server.project_api}`;

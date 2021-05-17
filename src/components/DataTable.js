@@ -80,7 +80,6 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     const d = new Date(v[3] * 1000);
     // cast datetime string
     const dateTime = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
-    //console.log(columnState, 'xxxx');
     return {
       image_id: v[0],
       status_display: STATUS_MAP[v[5]],
@@ -98,6 +97,7 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
 
   const [data, setData] = React.useState(tmp);
   const [changeLogs, setChangeLogs] = React.useState([]);
+
 //}, []);
 
   function coverRenderer(instance, td, row, col, prop, value, cellProperties) {
@@ -154,15 +154,20 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     readOnly: true
   }];
   const headers = ['status'];
-
-  for (let x in columnState) {
-    if (columnState[x].checked) {
-      headers.push(columnState[x].label);
-      columns.push({
-        data: x,
+  for (let i in columnState) {
+    const x = columnState[i];
+    if (x.checked) {
+      headers.push(x.label);
+      const row = {
+        data: i,
         renderer: 'text',
-        readOnly: x.indexOf(['filename']) >= 0 ? true : false,
-      });
+        readOnly: i.indexOf(['filename']) >= 0 ? true : false,
+      };
+      if (x.choices && x.choices.length > 0) {
+        row.type = 'dropdown';
+        row.source = x.choices;
+      }
+      columns.push(row);
     }
   }
 
@@ -176,7 +181,7 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     afterChange: updateData,
     afterSelectionEnd: onRowClick,
   };
-
+  console.log('<DataTable> ColumnState', columnState);
   return (
     <>
     <HotTable id="ct-hot" settings={settings} />

@@ -7,7 +7,39 @@ import { runCommand, runCommandCallback } from './adapters/command';
 const INI_FILE = 'camera-trap-desktop.ini';
 
 const loadConfig = async() => {
-  return await runCommand(`main.exe -i ${INI_FILE} -o json`, true);
+  const res = await runCommand(`main.exe -i ${INI_FILE} -o json`, true);
+  
+  //
+  const labels = res.data.Column.label_list.split(',');
+  const defaultLabels = res.data.Column.default_list.split(',')
+  const a = res.data.Column.annotation_list.split(',');
+  const aMap = Object.assign({}, ...a.map((x) => {
+    const v = x.split(':');
+    return {
+      [v[0]]: v[1]
+    };
+  }));
+
+  const initColumn = {};
+  for (let i=0; i<labels.length;i++) {
+    const v = labels[i].split(':');
+    let tmp = {
+      key: v[0],
+      label: v[1],
+      checked: defaultLabels.indexOf(v[0]) >= 0 ? true : false,
+      sort: i,
+    };
+    const k = `AnnotationField${aMap[v[0]]}`;
+    if (res.data.hasOwnProperty(k)) {
+      if (res.data[k].type && res.data[k].type === 'select') {
+        tmp.choices = res.data[k].choices.split(',');
+      }
+    }
+    initColumn[v[0]] = tmp;
+  }
+  res.data.initColumn = initColumn;
+
+  return res.data
 }
 const getSource = async(db_file, source_id, with_image) => {
   if (with_image) {

@@ -2,14 +2,16 @@ import React from 'react';
 
 //simport { runCommand} from './adapters/command';
 import MainContainer from './components/MainContainer';
-import {loadConfig} from './utils';
+import {
+  loadConfig,
+} from './utils';
 
 const ConfigContext = React.createContext();
 
 const App = () => {
   const [config, setConfig] = React.useState(null);
   React.useEffect(() => {
-    loadConfig().then((res)=>setConfig(res.data));
+    loadConfig().then((res)=> setConfig(res));
     console.log('root:', __dirname);
   }, []);
 
