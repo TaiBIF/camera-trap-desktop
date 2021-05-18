@@ -5,14 +5,6 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import Grid from '@material-ui/core/Grid';
 
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogActions from '@material-ui/core/DialogActions';
-import IconButton from '@material-ui/core/IconButton';
-import CloseIcon from '@material-ui/icons/Close';
-import Dialog from '@material-ui/core/Dialog';
-import DialogTitle from '@material-ui/core/DialogTitle';
-
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import NavigateNextIcon from '@material-ui/icons/NavigateNext';
 import Link from '@material-ui/core/Link';
@@ -27,6 +19,7 @@ import DataTable from './DataTable';
 import DisplaySetting from './DisplaySetting';
 import MenuSelector from './MenuSelector';
 import ImageSequenceSetting from './ImageSequenceSetting';
+import ImageViewer from './ImageViewer';
 
 import {
   saveAnnotation,
@@ -48,6 +41,8 @@ const useStyles = makeStyles({
 const ACTIONS = {
   ACTIVATE_INTERVAL: 'activate-interval',
   UPDATE_INTERVAL: 'update-interval',
+  OPEN_IMAGE_VIEWER: 'open-image-viewer',
+  UPDATE_ROW_INDEX: 'update-row-index',
 };
 
 
@@ -71,6 +66,18 @@ const editReducer = (state, action) => {
         }
       };
     }
+    case ACTIONS.OPEN_IMAGE_VIEWER: {
+      return {
+        ...state,
+        imageViewerOpen: action.data,
+      };
+    }
+    case ACTIONS.UPDATE_ROW_INDEX: {
+      return {
+        ...state,
+        currentRowIndex: action.data,
+      };
+    }
   }
 }
 
@@ -78,13 +85,14 @@ const editInitState = {
   imageSequence: {
     interval: 3, // 3mins
     activate: false,
-  }
+  },
+  imageViewerOpen: false,
+  currentRowIndex: 0,
 };
 
 const ImageListContainer = ({sourceData, onChangeView}) => {
   const classes = useStyles();
-  const [openImageScreen, setOpenImageScreen] = React.useState(false);
-  const [currentRowIndex, setCurrentRowIndex] = React.useState(0)
+
   const [openDisplaySetting, setOpenDisplaySetting] = React.useState(false);
   const initDesc = sourceData.source[7] ? JSON.parse(sourceData.source[7]) : null;
   const [menuSelect, setMenuSelect] = React.useState({
@@ -103,7 +111,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
   });
 
   const [editState, dispatch] = React.useReducer(editReducer, editInitState);
-  console.log(editState);
+  //console.log(editState);
   const config = React.useContext(ConfigContext);
 
   const [columnState, setColumnState] = React.useState(config.initColumn);
@@ -249,13 +257,31 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
       });
     }
   }
+  const handleArrowClick = (e, dir) => {
+    //console.log(e, dir, editState.currentRowIndex);
+    let index = 0;
+    if (dir === 'left') {
+      index = editState.currentRowIndex - 1;
+    } else if (dir === 'right') {
+      index = editState.currentRowIndex + 1;
+    }
+    console.log(editState.currentRowIndex, index);
+    if (index >= 0 && index < sourceData.image_list.length) {
+      dispatch({
+        type: ACTIONS.UPDATE_ROW_INDEX,
+        data: index
+      })
+    }
+  }
+
   const handleRowClick = (rowIndex) => {
     // prevent press on header
     if (rowIndex < 0) {
       return false;
     }
     const imageID = sourceData.image_list[rowIndex][0];
-    setCurrentRowIndex(rowIndex);
+    //setCurrentRowIndex(rowIndex);
+    dispatch({type: ACTIONS.UPDATE_ROW_INDEX, data: rowIndex});
     /*updateImage(config.SQLite.dbfile, 'status=O', imageID).then((res)=>{
       setCurrentRowIndex(rowIndex);
     });
@@ -308,32 +334,14 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
   }
 
   const ImagePreview = () => {
-    const srcAtom = getImage(currentRowIndex);
+    const srcAtom = getImage(editState.currentRowIndex);
     return (
-        <img src={srcAtom} width="100%" onClick={()=>setOpenImageScreen(true)} className={classes.imageThumb} />
+        <img src={srcAtom} width="100%" onClick={()=>dispatch({type: ACTIONS.OPEN_IMAGE_VIEWER, data: true})} className={classes.imageThumb} />
     )
   }
 
-  const ImageScreen = () => (
-      <Dialog
-      open={openImageScreen}
-      onClose={()=>setOpenImageScreen(false)}
-      aria-labelledby="alert-dialog-title"
-      aria-describedby="alert-dialog-description"
-      maxWidth="lg"
-      scroll="body"
-        >
-      <DialogTitle id="alert-dialog-title">{sourceData.image_list[currentRowIndex][1]}</DialogTitle>
-      <DialogContent>
-      <DialogContentText id="alert-dialog-description">
-      <img src={getImage(currentRowIndex)} width="100%"/>
-      </DialogContentText>
-      </DialogContent>
-      </Dialog>
-  )
+  console.log('<ImageListContainer>', sourceData, menuSelect, editState);
 
-
-  console.log('<ImageListContainer>', sourceData, menuSelect);
   return (
     <div className={classes.root}>
     <Grid container spacing={1}>
@@ -358,7 +366,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     <ImagePreview />
     </Grid>
     </Grid>
-    <ImageScreen />
+    <ImageViewer onClose={()=>dispatch({type: ACTIONS.OPEN_IMAGE_VIEWER, data: false})} image={getImage(editState.currentRowIndex)} title={sourceData.image_list[editState.currentRowIndex][1]} open={editState.imageViewerOpen} onArrow={handleArrowClick} sourceData={sourceData} editState={editState} columnState={columnState} />
     <DisplaySetting openDisplaySetting={openDisplaySetting} setOpenDisplaySetting={setOpenDisplaySetting} columnState={columnState} onColumnDisplayClick={handleColumnDisplayClick} />
     </div>
   )
