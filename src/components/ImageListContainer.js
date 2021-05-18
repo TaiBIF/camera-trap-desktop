@@ -1,17 +1,16 @@
 import { ipcRenderer } from 'electron'
 
 import React from 'react';
+
 import { makeStyles } from '@material-ui/core/styles';
-
 import Grid from '@material-ui/core/Grid';
-
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import NavigateNextIcon from '@material-ui/icons/NavigateNext';
 import Link from '@material-ui/core/Link';
-
 import Typography from '@material-ui/core/Typography';
-
 import Button from '@material-ui/core/Button';
+
+import { SnackbarProvider, useSnackbar } from 'notistack';
 
 import { ConfigContext } from '../app';
 import DataTable from './DataTable';
@@ -115,6 +114,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
   const config = React.useContext(ConfigContext);
 
   const [columnState, setColumnState] = React.useState(config.initColumn);
+  const providerRef = React.useRef();
 
   React.useEffect(() => {
     const url = `${config.Server.host}${config.Server.project_api}`;
@@ -246,13 +246,18 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     let put = JSON.stringify(trimData);
     //console.log(put);
     put = put.replace(/"/g, '\\"');
+    put = put.replace(/\s/g, '\_BLANK_'); // TODO
     //console.log(put);
     if (confirm('確定要存')) {
       saveAnnotation(config.SQLite.dbfile, put).then((res)=>{
         // refresh image list from main container
         //onChangeView(null, 'source-list');
-        if (res.is_success) {
-          alert('save ok');
+        if (res && res.is_success) {
+          //alert('save ok');
+          providerRef.current.enqueueSnackbar(`存檔成功`, { variant:'success' });
+        } else {
+          //alert('save error', res);
+          providerRef.current.enqueueSnackbar(`${res} | 存檔錯誤；`, { variant:'error' });
         }
       });
     }
@@ -353,6 +358,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     </Grid>
     </Grid>
     <hr />
+    <SnackbarProvider maxSnack={3} ref={providerRef}>
     <Button onClick={()=> setOpenDisplaySetting(true)} variant="outlined">
     設定顯示欄位
     </Button>
@@ -368,6 +374,7 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     </Grid>
     <ImageViewer onClose={()=>dispatch({type: ACTIONS.OPEN_IMAGE_VIEWER, data: false})} image={getImage(editState.currentRowIndex)} title={sourceData.image_list[editState.currentRowIndex][1]} open={editState.imageViewerOpen} onArrow={handleArrowClick} sourceData={sourceData} editState={editState} columnState={columnState} />
     <DisplaySetting openDisplaySetting={openDisplaySetting} setOpenDisplaySetting={setOpenDisplaySetting} columnState={columnState} onColumnDisplayClick={handleColumnDisplayClick} />
+    </SnackbarProvider>
     </div>
   )
 }

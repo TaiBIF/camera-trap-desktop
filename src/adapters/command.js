@@ -4,8 +4,6 @@ const exec = util.promisify(child_process.exec);
 const path = require("path");
 const fs = require("fs");
 
-
-
 const useCommand = (cmd) => {
   //const hasMainExe = fs.existsSync(path.join(__dirname, '..\\..\\..\\..\\..\\..\\main.exe'));
   if (process.env.NODE_ENV === 'development') {
@@ -16,32 +14,35 @@ const useCommand = (cmd) => {
 }
 
 async function runCommand(command, isJson){
+  try {
+    const cmd = useCommand(command)
+    const {error, stdout, stderr} = await exec(cmd);
 
-  const cmd = useCommand(command)
-  //console.log('run',cmd);
-  const {error, stdout, stderr} = await exec(cmd);
-
-  if (error) {
-    console.error(`error: ${error.message}`);
-    return;
-  }
-
-  if (stderr) {
-    console.error(`stderr: ${stderr}`);
-    return;
-  }
-
-  if (stdout) {
-    if (isJson) {
-      try {
-        return JSON.parse(stdout);
-      } catch(e) {
-        console.error(e);
-        console.log('python stdout', stdout);
-      }
-    } else {
-      return stdout;
+    if (error) {
+      console.error(`error: ${error.message}`);
+      return;
     }
+
+    if (stderr) {
+      console.error(`stderr: ${stderr}`);
+      return;
+    }
+
+    if (stdout) {
+      if (isJson) {
+        try {
+          return JSON.parse(stdout);
+        } catch(e) {
+          console.error(e);
+          console.log('python stdout', stdout);
+        }
+      } else {
+        return stdout;
+      }
+    }
+  } catch(error) {
+    console.error('command error: ', error);
+    return error
   }
 }
 

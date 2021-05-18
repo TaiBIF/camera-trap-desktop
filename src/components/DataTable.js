@@ -124,7 +124,7 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState, editState}) =
 
   const updateData = (changes) => {
     if (changes) {
-      console.log('changes', changes);
+      //console.log('changes', changes);
       setData((ps)=> {
         for (let i=0; i<changes.length;i++) {
           const [row, prop, oldVal, newVal] = changes[i];
@@ -197,6 +197,7 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState, editState}) =
     columns: columns,
     afterChange: updateData,
     afterSelectionEnd: onRowClick,
+    height: 500,
   };
   console.log('<DataTable> ColumnState', columnState);
   return (

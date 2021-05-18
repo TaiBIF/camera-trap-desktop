@@ -53,7 +53,6 @@ const ImageViewer = ({onClose, image, title, open, onArrow, sourceData, editStat
     const data = JSON.parse(sourceData.image_list[editState.currentRowIndex][7]);
     for (let i in columnState) {
       if (data[i]) {
-        console.log(i, data[i]);
         annotations.push(`${columnState[i].label}: ${data[i]}`);
       }
     }
