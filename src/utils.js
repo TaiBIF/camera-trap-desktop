@@ -100,6 +100,11 @@ const catLogger = (...args) => {
   //process.stdout.write(util.format(s) + '\n');
 };
 
+const datetimePresenter = (timestamp) => {
+  const d = new Date(timestamp * 1000);
+  return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+}
+
 export {
   loadConfig,
   addFolder,
@@ -113,4 +118,5 @@ export {
   uploadImage,
   updateSourceDescription,
   catLogger,
+  datetimePresenter,
 }

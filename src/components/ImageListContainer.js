@@ -26,6 +26,7 @@ import DataTable from './DataTable';
 //import UploadStepper from './components/Folder/UploadStepper';
 import DisplaySetting from './DisplaySetting';
 import MenuSelector from './MenuSelector';
+import ImageSequenceSetting from './ImageSequenceSetting';
 
 import {
   saveAnnotation,
@@ -44,6 +45,41 @@ const useStyles = makeStyles({
   }
 });
 
+const ACTIONS = {
+  ACTIVATE_INTERVAL: 'activate-interval',
+  UPDATE_INTERVAL: 'update-interval',
+};
+
+
+const editReducer = (state, action) => {
+  switch (action.type) {
+    case ACTIONS.ACTIVATE_INTERVAL: {
+      return {
+        ...state,
+        imageSequence: {
+          interval: state.imageSequence.interval,
+          activate: action.data,
+        }
+      };
+    }
+    case ACTIONS.UPDATE_INTERVAL: {
+      return {
+        ...state,
+        imageSequence: {
+          interval: action.data,
+          activate: state.imageSequence.activate,
+        }
+      };
+    }
+  }
+}
+
+const editInitState = {
+  imageSequence: {
+    interval: 3, // 3mins
+    activate: false,
+  }
+};
 
 const ImageListContainer = ({sourceData, onChangeView}) => {
   const classes = useStyles();
@@ -66,6 +102,8 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     }
   });
 
+  const [editState, dispatch] = React.useReducer(editReducer, editInitState);
+  console.log(editState);
   const config = React.useContext(ConfigContext);
 
   const [columnState, setColumnState] = React.useState(config.initColumn);
@@ -144,6 +182,14 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
     });
   }, [menuSelect.studyarea.selected]);
 
+  const handleImageSequenceInterval = (e, act, value) => {
+    //console.log('int', act, value, e.target.value);
+    if (act === 'activate') {
+      dispatch({ type: ACTIONS.ACTIVATE_INTERVAL, data: value });
+    } else if (act === 'update') {
+      dispatch({ type: ACTIONS.UPDATE_INTERVAL, data: e.target.value });
+    }
+  }
   const handleColumnDisplayClick = (e, key) => {
     //console.log(e.target, key);
     setColumnState((ps)=>{
@@ -289,33 +335,32 @@ const ImageListContainer = ({sourceData, onChangeView}) => {
 
   console.log('<ImageListContainer>', sourceData, menuSelect);
   return (
-      <div className={classes.root}>
-      <Grid container spacing={1}>
-      <Grid item sm={12}>
-      <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
-      <Link color="inherit" href="#" onClick={(e)=>onChangeView(e, 'source-list')}>目錄</Link>
-      <Typography color="textPrimary">{sourceData.source[3]}</Typography>
-      </Breadcrumbs>
-      </Grid>
-      </Grid>
-      <hr />
-
-      <Button onClick={()=> setOpenDisplaySetting(true)} variant="outlined">
-      設定顯示欄位
-      </Button>
-
-      {menuSelect ? <MenuSelector data={menuSelect} onChange={handleMenuChange} /> : null}
-      <Grid container spacing={1}>
-      <Grid item sm={8}>
-      <DataTable count={sourceData.image_list.length} onSave={handleSaveButton} onRow={handleRowClick} rowsInPage={sourceData.image_list} columnState={columnState} />
-      </Grid>
-      <Grid item sm={4}>
-      <ImagePreview />
-      </Grid>
-      </Grid>
-      <ImageScreen />
-      <DisplaySetting openDisplaySetting={openDisplaySetting} setOpenDisplaySetting={setOpenDisplaySetting} columnState={columnState} onColumnDisplayClick={handleColumnDisplayClick} />
-      </div>
+    <div className={classes.root}>
+    <Grid container spacing={1}>
+    <Grid item sm={12}>
+    <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
+    <Link color="inherit" href="#" onClick={(e)=>onChangeView(e, 'source-list')}>目錄</Link>
+    <Typography color="textPrimary">{sourceData.source[3]}</Typography>
+    </Breadcrumbs>
+    </Grid>
+    </Grid>
+    <hr />
+    <Button onClick={()=> setOpenDisplaySetting(true)} variant="outlined">
+    設定顯示欄位
+    </Button>
+    {menuSelect ? <MenuSelector data={menuSelect} onChange={handleMenuChange} /> : null}
+    <ImageSequenceSetting data={editState.imageSequence} onChangeInterval={handleImageSequenceInterval} key={editState.imageSequenceInterval} />
+    <Grid container spacing={1}>
+    <Grid item sm={8}>
+    <DataTable count={sourceData.image_list.length} onSave={handleSaveButton} onRow={handleRowClick} rowsInPage={sourceData.image_list} columnState={columnState} editState={editState} />
+    </Grid>
+    <Grid item sm={4}>
+    <ImagePreview />
+    </Grid>
+    </Grid>
+    <ImageScreen />
+    <DisplaySetting openDisplaySetting={openDisplaySetting} setOpenDisplaySetting={setOpenDisplaySetting} columnState={columnState} onColumnDisplayClick={handleColumnDisplayClick} />
+    </div>
   )
 }
 /*<UploadStepper /> TODO mui: transitions switch */

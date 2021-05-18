@@ -1,25 +1,13 @@
 import React from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
-/*
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TablePagination from '@material-ui/core/TablePagination';
-import Paper from '@material-ui/core/Paper';
-
-import TextField from '@material-ui/core/TextField';
-*/
 import Button from '@material-ui/core/Button';
 
-// handsontable
+// use handsontable
 import 'handsontable/dist/handsontable.full.css';
 import { HotTable, HotColumn } from '@handsontable/react';
 
-const HEADERS = ['status', '原始檔案', '日期時間', '物種', '年齡'];
+import {datetimePresenter} from '../utils';
 
 const useStyles = makeStyles({
   table: {
@@ -30,15 +18,10 @@ const useStyles = makeStyles({
   },
   button: {
     margin: '10px 20px 0 0',
-  }
+  },
 });
 
 //import {CellEditor} from './CellEditor';
-
-const CellRender = ({value}) => {
-  return (<div>{value}</div>)
-};
-
 
 //🐤🐥🍗📂
 const STATUS_MAP = {
@@ -49,25 +32,48 @@ const STATUS_MAP = {
   '110': '-',
   '200': '✔️',
 }
-const getStatus = (x) => {
-  for (let i in STATUS_MAP) {
-    if (STATUS_MAP[i] === x) {
-      return i;
-    }
-  }
-}
 
-const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
+const DataTable = ({rowsInPage, count, onSave, onRow, columnState, editState}) => {
   const classes = useStyles();
-  //console.log('render DataTable', rowsInPage);
+  let lastTimestamp = rowsInPage[0][3];
+
   //React.useEffect(() => {
-  const tmp = rowsInPage.map((v) => {
+  //}, []);
+
+  const renderStatusCell = (instance, td, row, col, prop, value, cellProperties) => {
+    td.innerHTML = STATUS_MAP[value];
+  }
+
+  const renderCell = (instance, td, row, col, prop, value, cellProperties) => {
+    //console.log(instance, td, row, col, prop, value, cellProperties)
+
+    if (sequenceMap[row][0] > 0 ) {
+      td.style.backgroundColor = `hsl(${sequenceMap[row][1]},50%, 95%, 0.8)`;
+    }
+    if (prop === 'datetime' && value) {
+      const lastRow = Math.min(Math.max(0, row-1), rowsInPage.length);
+      value = datetimePresenter(value);
+    }
+    td.innerHTML = value;
+  };
+
+  const sequenceMap = [];
+  let combinePrev = false;
+  let combineNext = false;
+  let seqID = 0;
+  let salt = Math.random();
+  const golden_ratio_conjugate = 0.618033988749895;
+  // via: https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
+
+  const tmp = rowsInPage.map((v, i) => {
     let lifestage = '';
     let sex = '';
     let species = '';
     let animal_id = '';
     let remarks = '';
     let antler = '';
+    let image_sequence = 0;
+
     if (v[7]) {
       const jdata = JSON.parse(v[7]);
       lifestage = jdata.lifestage;
@@ -77,15 +83,32 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
       antler = jdata.antler;
       remarks = jdata.remarks;
     }
-    const d = new Date(v[3] * 1000);
-    // cast datetime string
-    const dateTime = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+    const nextIndex = Math.min(i+1, rowsInPage.length-1);
+    const nextTimeStamp = rowsInPage[nextIndex][3];
+
+    combinePrev = combineNext;
+    if (nextTimeStamp && (nextTimeStamp - v[3]) <= editState.imageSequence.interval*60) {
+      combineNext = true;
+    } else {
+      combineNext = false;
+    }
+    if (combineNext === true && combinePrev === false) {
+      seqID += 1;
+      salt += golden_ratio_conjugate;
+      salt %= 1;
+    }
+    if (editState.imageSequence.activate && (combineNext || combinePrev)) {
+      sequenceMap.push([seqID, salt*256]);
+    } else {
+      sequenceMap.push([0, 0]);
+    }
+    //console.log(i, combineNext, combinePrev, seqID, x);
+
     return {
       image_id: v[0],
-      status_display: STATUS_MAP[v[5]],
       status: v[5],
       filename: v[2],
-      datetime: dateTime,
+      datetime: v[3],
       lifestage: lifestage,
       sex: sex,
       species: species,
@@ -98,33 +121,26 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
   const [data, setData] = React.useState(tmp);
   const [changeLogs, setChangeLogs] = React.useState([]);
 
-//}, []);
-
-  function coverRenderer(instance, td, row, col, prop, value, cellProperties) {
-    //console.log(td, row, col, prop, value, cellProperties);
-    console.log(prop, '|', value, '|',data[row][prop], data[row][prop] !== value, typeof(value))
-    //if (value !== "")
-    if (data[row][prop] !== value) {
-      // changes
-      console.log('write value',value);
-    }
-    return td
-  }
-
-  //const handleUpload = (e) => {
-  //  console.log(rowsInPage);
-  //}
 
   const updateData = (changes) => {
     if (changes) {
-      //console.log('changes', changes);
+      console.log('changes', changes);
       setData((ps)=> {
         for (let i=0; i<changes.length;i++) {
           const [row, prop, oldVal, newVal] = changes[i];
+          const seqID = sequenceMap[row][0];
           ps[row][prop] = newVal;
           if (ps[row]['status'] === '20') {
             ps[row]['status'] = '30';
-            ps[row]['status_display'] = STATUS_MAP['30'];
+            //ps[row]['status_display'] = STATUS_MAP['30'];
+          }
+          if (editState.imageSequence.activate) {
+            for (let i=0; i<ps.length ;i++) {
+              if (sequenceMap[i][0] === seqID) {
+                console.log(i, ps[i], prop, newVal, seqID);
+                ps[i][prop] = newVal;
+              }
+            }
           }
         }
         return ps
@@ -139,29 +155,30 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     setData((ps)=> {
       if (ps[rowIndex]['status'] === '10') {
         ps[rowIndex]['status'] = '20';
-        ps[rowIndex]['status_display'] = STATUS_MAP['20'];
+        //ps[rowIndex]['status_display'] = STATUS_MAP['20'];
       }
       return ps
     })
     onRow(rowIndex);
-  }
+ }
 
 
   // set status_display as first
   const columns = [{
-    data: 'status_display',
-    renderer: 'text',
+    data: 'status',
+    renderer: renderStatusCell,
     readOnly: true
   }];
   const headers = ['status'];
+
   for (let i in columnState) {
     const x = columnState[i];
     if (x.checked) {
       headers.push(x.label);
       const row = {
         data: i,
-        renderer: 'text',
-        readOnly: i.indexOf(['filename']) >= 0 ? true : false,
+        renderer: renderCell,
+        readOnly: (['datetime', 'filename'].indexOf(i)) >= 0 ? true : false,
       };
       if (x.choices && x.choices.length > 0) {
         row.type = 'dropdown';
@@ -170,7 +187,7 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
       columns.push(row);
     }
   }
-
+  //console.log(sequenceMap);
   const settings = {
     data: data,
     colHeaders: headers,
@@ -189,81 +206,10 @@ const DataTable = ({rowsInPage, count, onSave, onRow, columnState}) => {
     </>
   )
 }
-//<Button variant="contained" color="secondary" onClick={handleUpload} className={classes.button}>Upload</Button>
-
-/*
-const DataTableMui = ({rowsInPage, count, onSave, onRowcol}) => {
-
-
-
-  const ImageRows = ({rows}) => (
-    rows.map(
-      (row, index) => {
-        let lifestage = '';
-        let sex = '';
-
-        if (row[6] !== "") {
-          const jdata = JSON.parse(row[6]);
-          lifestage = jdata.lifestage;
-          sex = jdata.sex;
-        }
-
-        //const isSelected = (index === currentRow.index) ? true : false;
-        const isSelected = false;
-        const key = `ct-row${index}`;
-        //console.log(annotationData);
-
-        //<TextField key={key} id={key} variant="filled" value={annotationData[index].species || ''}  onChange={(e)=>handleFieldChange(e, index, 'species')} />
-<TextField key={key} id={key} variant="outlined" value={annotationData[index]['sex'] || ''} onChange={(e)=>handleFieldChange(e, index, 'sex')} />
-
-        const isFocus = (index === 2) ? true : false;
-        console.log('render', row);
-        return (
-            <TableRow key={index} hover selected={isSelected}>
-            <TableCell component="th" scope="row">{index+1}</TableCell>
-            <TableCell align="right">{row[2]}</TableCell>
-            <TableCell align="right" onClick={(e)=>onRow(e, index)}>{row[1]}</TableCell>
-            <TableCell align="right">{row[3]}</TableCell>
-            {isFocus ?
-             <TableCell align="right"><TextField defaultValue="" className="ct-input" id={key+"-species"} key={key+"-species"} autoFocus={true} /></TableCell>
-             :
-             <TableCell align="right"><TextField defaultValue="" className="ct-input" id={key+"-species"} key={key+"-species"} /></TableCell>
-            }
-            <TableCell align="right"><TextField defaultValue="" className="ct-input" id={key+"-sex"} /></TableCell>
-            </TableRow>
-        )
-      }
-      ));
-  return (
-      <>
-      <TableContainer component={Paper} className={classes.container}>
-      <Table className={classes.table} aria-label="simple table" stickyHeader size="small">
-      <TableHead>
-      <TableRow>
-      <TableCell>#</TableCell>
-      <TableCell align="right">status</TableCell>
-      <TableCell align="right">原始檔名</TableCell>
-      <TableCell align="right">日期時間</TableCell>
-      <TableCell align="right">物種</TableCell>
-      <TableCell align="right">備註</TableCell>
-      </TableRow>
-      </TableHead>
-      <TableBody>
-      <ImageRows rows={rowsInPage} />
-    </TableBody>
-      </Table>
-      </TableContainer>
-        <TablePagination
-    rowsPerPageOptions={[20, 50, 100]}
-    component="div"
-    count={count}
-    rowsPerPage={rowsPerPage}
-    page={page}
-    onChangePage={handleChangePage}
-    onChangeRowsPerPage={handleChangeRowsPerPage}
-      />
-      </>
-  )
-};
+/** settings
+    hiddenColumns: {
+      columns: [0, 1],
+    }
 */
+
 export default DataTable;
