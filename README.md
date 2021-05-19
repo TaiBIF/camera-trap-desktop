@@ -4,6 +4,16 @@
 
 - nodejs v14.16.1 (npm v6.14.12)
 
+## run
+
+run react dev server & electron in development mode
+
+```bash
+$ npm run dev:react
+# different terminal
+$ npm run dev:electron
+```
+
 # Build
 
 ```bash
