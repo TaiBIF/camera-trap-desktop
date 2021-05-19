@@ -1,3 +1,8 @@
+# Development
+
+## requirements
+
+- nodejs v14.16.1 (npm v6.14.12)
 
 # Build
 
