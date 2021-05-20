@@ -15,16 +15,16 @@ const useCommand = (cmd) => {
 
   const platform = os.platform();
   if (platform === 'darwin') {
-    pythonExe = path.join('py-script', 'venv', 'bin', 'python');
-    mainExe = path.join('py-script', 'main.py')
+    pythonExe = path.resolve('./py-script/venv/bin/python');
+    mainExe = path.resolve('./py-script/main.py')
   } else if (platform === 'win32') {
-    pythonExe = path.join('py-script', 'venv', 'Scripts', 'python.exe');
-    mainExe = path.win32.join('py-script', 'main.py')
+    pythonExe = path.resolve('.\\py-script\\venv\\Scripts\\python.exe');
+    mainExe = path.win32.resolve('.\\py-script\\main.py')
   }
   //console.log(pythonExe, );
   if (process.env.NODE_ENV === 'development') {
     //'.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py
-    return cmd.replace('main.exe', `./${pythonExe} ./${mainExe}`);
+    return cmd.replace('main.exe', `${pythonExe} ${mainExe}`);
   } else {
     return cmd;
   }
