@@ -1,6 +1,7 @@
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
+var os = require('os');
 
 import { runCommand, runCommandCallback } from './adapters/command';
 
@@ -85,14 +86,23 @@ const getImageList = async(db_file, source_id) => {
 
 
 const catLogger = (...args) => {
-  console.log(...args);
+  //console.log(...args);
 
-  const logPath = path.join(
-    __dirname,
-    (process.env.NODE_ENV === 'development') ?
-    '..\\..\\..\\..\\..\\..\\Debug.log' :
-    '..\\..\\..\\Debug.log');
-
+  let logPath;
+  const platform = os.platform();
+  if (platform === 'darwin') {
+    if (process.env.NODE_ENV === 'development') {
+      logPath = path.resolve(__dirname, '../../../../../../Debug.log');
+    } else {
+      logPath = path.resolve(__dirname, '../../../Debug.log');
+    }
+  } else if (platform === 'win32') {
+    if (process.env.NODE_ENV === 'development') {
+      logPath = path.resolve(__dirname, '..\\..\\..\\..\\..\\..\\Debug.log');
+    } else {
+      logPath = path.resolve(__dirname, '..\\..\\..\\Debug.log');
+    }
+  }
   const d = new Date();
   const dateTime = `[${d.getYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}:${d.getMilliseconds()}]`;
   const logFile = fs.createWriteStream(logPath, {flags : 'a'});
