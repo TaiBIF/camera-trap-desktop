@@ -15,7 +15,7 @@
     "dist": "electron-builder",
     "packager": "electron-packager . camera-trap-desktop --platform=win32 --arch=x64 --out=../out --overwrite --asar; cp .\\py-dist\\main.exe ..\\out\\camera-trap-desktop-win32-x64",
     "packager32": "electron-packager . camera-trap-desktop --platform=win32 --arch=ia32 --out=../out --overwrite --asar; cp .\\py-dist32\\main.exe ..\\out\\camera-trap-desktop-win32-ia32",
-    "package-py-win": ".\\py-script\\venv\\Scripts\\activate.ps1; pyinstaller.exe --onefile -F .\\py-script\\main.py --distpath .\\py-dist --clean"
+    "package-py-win": ".\\py-script\\venv\\Scripts\\activate.ps1; pyinstaller.exe --onefile -F .\\py-script\\main.py --distpath .\\py-dist --clean",
     "package-py-win32": ".\\py-script\\venv32\\Scripts\\activate.ps1; pyinstaller.exe --onefile -F .\\py-script\\main.py --distpath .\\py-dist32 --clean"
   },
   "author": "",
