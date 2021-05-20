@@ -8,7 +8,7 @@ const INI_FILE = 'camera-trap-desktop.ini';
 
 const loadConfig = async() => {
   const res = await runCommand(`main.exe -i ${INI_FILE} -o json`, true);
-  
+
   //
   const labels = res.data.Column.label_list.split(',');
   const defaultLabels = res.data.Column.default_list.split(',')

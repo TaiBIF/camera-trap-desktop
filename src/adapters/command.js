@@ -3,11 +3,28 @@ const child_process = require('child_process');
 const exec = util.promisify(child_process.exec);
 const path = require("path");
 const fs = require("fs");
+var os = require('os');
+
 
 const useCommand = (cmd) => {
   //const hasMainExe = fs.existsSync(path.join(__dirname, '..\\..\\..\\..\\..\\..\\main.exe'));
+  //console.log(os.type()); // "Windows_NT"
+  //console.log(os.release()); // "10.0.14393"
+  //console.log(os.platform()); // "win32"
+  let pythonExe, mainExe;
+
+  const platform = os.platform();
+  if (platform === 'darwin') {
+    pythonExe = path.join('py-script', 'venv', 'bin', 'python');
+    mainExe = path.join('py-script', 'main.py')
+  } else if (platform === 'win32') {
+    pythonExe = path.join('py-script', 'venv', 'Scripts', 'python.exe');
+    mainExe = path.win32.join('py-script', 'main.py')
+  }
+  //console.log(pythonExe, );
   if (process.env.NODE_ENV === 'development') {
-    return cmd.replace('main.exe', '.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py');
+    //'.\\py-script\\venv\\Scripts\\python.exe .\\py-script\\main.py
+    return cmd.replace('main.exe', `./${pythonExe} ./${mainExe}`);
   } else {
     return cmd;
   }
